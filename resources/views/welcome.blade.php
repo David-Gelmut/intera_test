@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовое: Яндекс.Карты</title>
+    @vite(['resources/js/app.js']) <!-- Подключение Vue через Vite -->
+</head>
+<body>
+<div id="app"></div> <!-- Сюда монтируется Vue -->
+</body>
+</html>

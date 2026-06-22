@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+    # Веб-сервер (Laravel + Vue 3)
+    app:
+        build:
+            context: app/docker
+            dockerfile: Dockerfile
+        container_name: yandex_app
+        restart: unless-stopped
+        cap_add:
+            - SYS_ADMIN
+        security_opt:
+            - seccomp:unconfined
+        shm_size: '2gb'
+        ports:
+            - "8000:80"
+        volumes:
+            - .:/var/www
+        env_file:
+            - .env
+        depends_on:
+            - mysql
+            - redis
+
+    # Контейнер для обработки очередей из Базы Данных (MySQL)
+    queue-worker:
+        build:
+            context: app/docker
+            dockerfile: Dockerfile
+        container_name: yandex_worker
+        restart: unless-stopped
+        # Важно: указываем драйвер database вместо redis
+        command: php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=600
+        cap_add:
+            - SYS_ADMIN
+        security_opt:
+            - seccomp:unconfined
+        shm_size: '2gb'
+        volumes:
+            - .:/var/www
+        env_file:
+            - .env
+        depends_on:
+            - mysql
+            - redis
+
+    # База данных: MySQL
+    mysql:
+        image: mysql:8.0
+        container_name: yandex_mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+        ports:
+            - "3310:3306"
+        volumes:
+            - mysql_data:/var/lib/mysql
+
+    # Кэш: Redis
+    redis:
+        image: redis:7-alpine
+        container_name: yandex_redis
+        restart: unless-stopped
+        command: redis-server --appendonly yes
+        volumes:
+            - redis_data:/data
+        ports:
+            - "6379:6379"
+
+volumes:
+    mysql_data:
+        driver: local
+    redis_data:
+        driver: local
