@@ -44,7 +44,10 @@
   docker-compose exec -it app php artisan migrate
 ```
 ```bash
+  # Тестовый пользователь  admin@example.com password
   docker-compose exec -it app php artisan db:seed
+  
+  
  ```
 4. Установите зависимости фронтенда, бэкенда и запустите сборку:
    ```bash
