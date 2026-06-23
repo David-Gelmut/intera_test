@@ -15,10 +15,10 @@
 
 ```bash 
   # Клонирование репозитория
-  git clone https://github.com/David-Gelmut/logistic_test.git
+  git clone https://github.com/David-Gelmut/intera_test.git
   
   # Создание конфигурационного файла
-  cp .env.example .
+  cp .env.example .env
   
   # Установка зависимостей Backend
   composer install
