@@ -52,7 +52,7 @@
 4. Установите зависимости фронтенда, бэкенда и запустите сборку:
    ```bash
     npm install
-    npm run dev
+    npm run build
    ```
 5. Для Linux:
 ```bash
