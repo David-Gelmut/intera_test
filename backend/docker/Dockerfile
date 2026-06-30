@@ -15,10 +15,14 @@ RUN apk add --no-cache \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont\
+    tesseract-ocr \
+    tesseract-ocr-data-rus
+
 
 # 2. Установка PHP расширений
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
 
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && pecl install redis \

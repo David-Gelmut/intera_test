@@ -36,11 +36,33 @@
         </router-link>
       </nav>
 
-      <!-- Подвал сайдбара с кнопкой Выхода -->
-      <div class="border-t border-slate-100 p-4">
+      <!-- Подвал сайдбара с Профилем и кнопкой Выхода -->
+      <div class="border-t border-slate-100 p-4 space-y-3">
+        <!-- Блок Профиля (ссылка) -->
+        <router-link
+            to="/profile"
+            class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group"
+            active-class="!bg-slate-50"
+        >
+          <!-- Круглый аватар пользователя -->
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-sm text-blue-700 uppercase tracking-wider group-hover:bg-blue-200 transition-colors">
+            {{ userInitials }}
+          </div>
+          <!-- Имя и Email -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+              {{ authStore.user?.name || 'Пользователь' }}
+            </p>
+            <p class="text-xs text-slate-400 truncate">
+              {{ authStore.user?.email || 'email@example.com' }}
+            </p>
+          </div>
+        </router-link>
+
+        <!-- Кнопка Выхода -->
         <button
             @click="handleLogout"
-            class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+            class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20"
         >
           <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -79,8 +101,15 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const menuRoutes = computed(() => {
-    return router.getRoutes().filter(route => route.meta?.auth)
+    return router.getRoutes().filter(route => route.meta?.auth && !route.meta?.hidden)
 })
+
+// Вычисляемое свойство для первой буквы имени (для круглого аватара)
+const userInitials = computed(() => {
+  if (!authStore.user?.name) return 'U';
+  // Берем первую букву имени
+  return authStore.user.name.charAt(0);
+});
 
 const handleLogout = async () => {
     await authStore.logout();
