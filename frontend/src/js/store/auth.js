@@ -33,6 +33,17 @@ export const useAuthStore = defineStore('auth', {
                 this.user = null;
                 localStorage.removeItem('user');
             }
+        },
+        async register(credentials) {
+            try {
+                await this.getCsrfCookie();
+                const response = await axios.post('/api/auth/register', credentials);
+                this.user = response.data.user;
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+            } catch (error) {
+                console.error('Ошибка при регистрации на сервере:', error);
+                throw error;
+            }
         }
     }
 });

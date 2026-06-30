@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // 1. Включаем поддержку сессий/cookie для фронтенда (Sanctum)
+        $middleware->statefulApi();
+
        /* $middleware->web(append: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);*/

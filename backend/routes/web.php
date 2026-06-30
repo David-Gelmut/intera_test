@@ -5,7 +5,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ConvertController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+/*Route::get('/', function () {
     return view('welcome');
 });
 
@@ -18,5 +18,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/{any}', function () {
     return view('welcome');
-})->where('any', '.*');
+})->where('any', '.*');*/
 
