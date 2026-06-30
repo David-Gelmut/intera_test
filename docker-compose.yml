@@ -1,75 +1,78 @@
 services:
 
-    app:
-        build:
-            context: ./backend/docker
-            dockerfile: Dockerfile
-        container_name: yandex_app
-        restart: unless-stopped
-        cap_add:
-            - SYS_ADMIN
-        security_opt:
-            - seccomp:unconfined
-        shm_size: '2gb'
-        ports:
-            - "8000:80"
-        volumes:
-            - .:/var/www
-        env_file:
-            - ./backend/.env
-        depends_on:
-            - mysql
-            - redis
+  app:
+    build:
+      context: ./backend/docker
+      dockerfile: Dockerfile
+    container_name: yandex_app
+    restart: unless-stopped
+    working_dir: /var/www
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    shm_size: '2gb'
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mysql
+      - redis
 
-    queue-worker:
-        build:
-            context: ./backend/docker
-            dockerfile: Dockerfile
-        container_name: yandex_worker
-        restart: unless-stopped
-        command: php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=600
-        cap_add:
-            - SYS_ADMIN
-        security_opt:
-            - seccomp:unconfined
-        shm_size: '2gb'
-        volumes:
-            - .:/var/www
-        env_file:
-            - ./backend/.env
-        depends_on:
-            - mysql
-            - redis
+  queue-worker:
+    build:
+      context: ./backend/docker
+      dockerfile: Dockerfile
+    container_name: yandex_worker
+    restart: unless-stopped
+    # Явно указываем рабочую директорию, где лежит artisan
+    working_dir: /var/www
+    command: php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=600
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    shm_size: '2gb'
+    volumes:
+      - ./backend:/var/www
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mysql
+      - redis
 
-    mysql:
-        image: mysql:8.0
-        container_name: yandex_mysql
-        restart: unless-stopped
-        env_file:
-            - ./backend/.env
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_USER: ${DB_USERNAME}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
-        ports:
-            - "3310:3306"
-        volumes:
-            - mysql_data:/var/lib/mysql
+  mysql:
+    image: mysql:8.0
+    container_name: yandex_mysql
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
 
 
-    redis:
-        image: redis:7-alpine
-        container_name: yandex_redis
-        restart: unless-stopped
-        command: redis-server --appendonly yes
-        volumes:
-            - redis_data:/data
-        ports:
-            - "6379:6379"
+  redis:
+    image: redis:7-alpine
+    container_name: yandex_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
 
 volumes:
-    mysql_data:
-        driver: local
-    redis_data:
-        driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local

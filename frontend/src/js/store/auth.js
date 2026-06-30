@@ -10,13 +10,13 @@ export const useAuthStore = defineStore('auth', {
     },
     actions: {
         async getCsrfCookie() {
-            await axios.get('/sanctum/csrf-cookie', { baseURL: '/' });
+            await axios.get('/sanctum/csrf-cookie');
         },
         async login(credentials) {
 
             try {
                 await this.getCsrfCookie();
-                const response = await axios.post('/auth/login', credentials);
+                const response = await axios.post('/api/auth/login', credentials);
                 this.user = response.data.user;
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             } catch (error) {
@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', {
         },
         async logout() {
             try {
-                await axios.post('/auth/logout');
+                await axios.post('/api/auth/logout');
             } catch (error) {
                 console.error('Ошибка при логауте на сервере:', error);
             } finally {

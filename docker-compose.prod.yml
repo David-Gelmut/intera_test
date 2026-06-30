@@ -6,15 +6,16 @@ services:
       dockerfile: Dockerfile
     container_name: yandex_app
     restart: unless-stopped
+    working_dir: /var/www
     cap_add:
       - SYS_ADMIN
     security_opt:
       - seccomp:unconfined
     shm_size: '2gb'
     ports:
-      - "8080:80"
+      - "8000:80"
     volumes:
-      - .:/var/www
+      - ./backend/:/var/www
     env_file:
       - backend/.env
     depends_on:
@@ -29,6 +30,7 @@ services:
       dockerfile: Dockerfile
     container_name: yandex_worker
     restart: unless-stopped
+    working_dir: /var/www
     command: php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=600
     cap_add:
       - SYS_ADMIN
@@ -36,7 +38,7 @@ services:
       - seccomp:unconfined
     shm_size: '2gb'
     volumes:
-      - .:/var/www
+      - ./backend/:/var/www
     env_file:
       - ./backend/.env
     depends_on:
