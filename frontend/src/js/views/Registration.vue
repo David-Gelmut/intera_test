@@ -76,6 +76,28 @@
             </div>
           </div>
 
+          <!-- Поле Подтверждение пароля -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Подтверждение пароля</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </span>
+              <input
+                  v-model="form.password_confirmation"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm shadow-xs"
+                  :class="{ 'border-rose-300 focus:ring-rose-500/20 focus:border-rose-500': isPasswordMismatch }"
+              />
+            </div>
+            <!-- Быстрая фронтенд-подсказка, если пароли не совпадают -->
+            <p v-if="isPasswordMismatch" class="text-xs text-rose-600 font-medium">Пароли в данный момент не совпадают.</p>
+          </div>
+
           <!-- Кнопка отправки -->
           <button
               type="submit"
@@ -118,7 +140,7 @@ import { useRouter } from 'vue-router';
 const authStore = useAuthStore();
 const router = useRouter();
 const isLoading = ref(false);
-const form = ref({ email: '', password: '', name: '' });
+const form = ref({ email: '', password: '', name: '', password_confirmation: ''});
 const error = ref(null);
 
 const handleRegister = async () => {
