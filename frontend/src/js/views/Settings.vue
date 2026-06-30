@@ -153,7 +153,7 @@ const handleSubmit = async () => {
 ;
 </script>
 <style scoped>
-.settings-page {
+/*.settings-page {
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -483,5 +483,5 @@ h2, h3 {
     font-size: 0.9rem;
     color: #4a5568;
     font-weight: 500;
-}
+}*/
 </style>

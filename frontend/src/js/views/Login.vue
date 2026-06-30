@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '../store/auth.js';
 import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
@@ -34,7 +34,7 @@ const handleLogin = async () => {
 
     try {
         await authStore.login(form.value);
-        router.push('/settings');
+        router.push('/convert');
     } catch (err) {
         error.value = err.response?.data?.message;
     }
@@ -42,7 +42,7 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login-page {
+/*.login-page {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -109,5 +109,5 @@ button {
 button:disabled {
     background: #a0aec0;
     cursor: not-allowed;
-}
+}*/
 </style>

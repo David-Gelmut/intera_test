@@ -1,27 +1,41 @@
+# Системные файлы и логи
 *.log
 .DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.codex
-/.cursor/
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/fonts-manifest.dev.json
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-_ide_helper.php
+Thumbs.db
 Homestead.json
 Homestead.yaml
-Thumbs.db
+
+# IDE и редакторы
+/.idea/
+/backend/.cursor/
+/backend/.nova/
+/backend/.vscode/
+/backend/.zed/
+
+# Кэш и служебные файлы разработки бэкенда
+/backend/.phpactor.json
+/backend/.phpunit.result.cache
+/backend/.codex
+/backend/.phpunit.cache
+/backend/_ide_helper.php
+
+# Секреты и бэкапы окружения
+/backend/.env
+/backend/.env.backup
+/backend/.env.production
+/backend/auth.json
+/backend/storage/*.key
+
+# Зависимости (Vendor & Node_modules)
+backend/vendor/
+frontend/node_modules/
+
+# Публичные файлы сборки Laravel и линки
+/backend/public/build
+/backend/public/fonts-manifest.dev.json
+/backend/public/hot
+/backend/public/storage
+/backend/storage/pail
+
+# Директория сборки фронтенда (Vite / Vue)
+frontend/dist/

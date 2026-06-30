@@ -1,14 +1,16 @@
 import {createRouter, createWebHistory} from 'vue-router';
-import {useAuthStore} from '../store/auth';
+import {useAuthStore} from '../store/auth.js';
 import Login from '../views/Login.vue';
 import Settings from '../views/Settings.vue';
+import Convert from "../views/Convert.vue";
 
 const router = createRouter({
     history: createWebHistory(),
     routes: [
         {path: '/login', name: 'login', component: Login, meta: {guest: true}},
         {path: '/settings', name: 'settings', component: Settings, meta: {auth: true}},
-        {path: '/', redirect: '/settings'}
+        {path: '/convert', name: 'convert', component: Convert, meta: {auth: true}},
+        {path: '/', redirect: '/convert'}
     ]
 });
 
@@ -20,7 +22,7 @@ router.beforeEach((to, from, next) => {
     }
 
     if (to.meta.guest && authStore.isAuthenticated) {
-        return next('/settings');
+        return next('/convert');
     }
 
     next();

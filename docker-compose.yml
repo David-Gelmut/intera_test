@@ -2,7 +2,7 @@ services:
 
     app:
         build:
-            context: app/docker
+            context: ./backend/docker
             dockerfile: Dockerfile
         container_name: yandex_app
         restart: unless-stopped
@@ -16,14 +16,14 @@ services:
         volumes:
             - .:/var/www
         env_file:
-            - .env
+            - ./backend/.env
         depends_on:
             - mysql
             - redis
 
     queue-worker:
         build:
-            context: app/docker
+            context: ./backend/docker
             dockerfile: Dockerfile
         container_name: yandex_worker
         restart: unless-stopped
@@ -36,7 +36,7 @@ services:
         volumes:
             - .:/var/www
         env_file:
-            - .env
+            - ./backend/.env
         depends_on:
             - mysql
             - redis
@@ -45,6 +45,8 @@ services:
         image: mysql:8.0
         container_name: yandex_mysql
         restart: unless-stopped
+        env_file:
+            - ./backend/.env
         environment:
             MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
             MYSQL_DATABASE: ${DB_DATABASE}
@@ -54,6 +56,7 @@ services:
             - "3310:3306"
         volumes:
             - mysql_data:/var/lib/mysql
+
 
     redis:
         image: redis:7-alpine

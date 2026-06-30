@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import { bunny } from 'laravel-vite-plugin/fonts';
+//import laravel from 'laravel-vite-plugin';
+//import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
-import vue from '@vitejs/plugin-vue'; // Добавляем импорт плагина
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
-        laravel({
+       /* laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
             fonts: [
@@ -14,21 +14,28 @@ export default defineConfig({
                     weights: [400, 500, 600],
                 }),
             ],
-        }),
-        vue({
+        }),*/
+        /*vue({
             template: {
                 transformAssetUrls: {
                     base: null,
                     includeAbsolute: false,
                 },
             },
-        }),
+        }),*/
+        vue(),
         tailwindcss(),
 
     ],
     server: {
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
-        },
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+            }
+        }
+        /*watch: {
+            ignored: ['**!/storage/framework/views/!**'],
+        },*/
     },
 });

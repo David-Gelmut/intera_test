@@ -1,17 +1,27 @@
 <template>
     <div class="main-layout">
         <nav v-if="authStore.isAuthenticated">
+            <div v-for="route in menuRoutes" :key="route.path">
+                <router-link :to="route.path">
+                    {{ route.name }}
+                </router-link>
+            </div>
             <button class="main-button" @click="handleLogout">Выйти</button>
         </nav>
         <router-view></router-view>
     </div>
 </template>
 <script setup>
-import { useAuthStore } from './store/auth';
+import { useAuthStore } from './store/auth.js';
 import { useRouter } from 'vue-router';
+import { computed } from 'vue'
 
 const authStore = useAuthStore();
 const router = useRouter();
+
+const menuRoutes = computed(() => {
+    return router.getRoutes().filter(route => route.meta?.auth)
+})
 
 const handleLogout = async () => {
     await authStore.logout();
@@ -20,6 +30,7 @@ const handleLogout = async () => {
 </script>
 
 <style>
+/*
 * {
     box-sizing: border-box;
     margin: 0;
@@ -67,5 +78,6 @@ button {
     margin-top: 6rem;
     margin-bottom: 0;
 }
+*/
 
 </style>

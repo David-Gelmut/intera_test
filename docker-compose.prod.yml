@@ -2,7 +2,7 @@ services:
 
   app:
     build:
-      context: app/docker
+      context: ./backend/docker
       dockerfile: Dockerfile
     container_name: yandex_app
     restart: unless-stopped
@@ -12,11 +12,11 @@ services:
       - seccomp:unconfined
     shm_size: '2gb'
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - .:/var/www
     env_file:
-      - .env
+      - backend/.env
     depends_on:
       - mysql
       - redis
@@ -25,7 +25,7 @@ services:
 
   queue-worker:
     build:
-      context: app/docker
+      context: ./backend/docker
       dockerfile: Dockerfile
     container_name: yandex_worker
     restart: unless-stopped
@@ -38,7 +38,7 @@ services:
     volumes:
       - .:/var/www
     env_file:
-      - .env
+      - ./backend/.env
     depends_on:
       - mysql
       - redis
@@ -58,6 +58,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    env_file:
+      - ./backend/.env
     networks:
       - app-network
 
