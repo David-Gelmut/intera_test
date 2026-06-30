@@ -48,7 +48,7 @@ RUN chmod 777 /tmp \
 
 # 7. Настройка Nginx
 RUN rm -rf /etc/nginx/http.d/default.conf && rm -rf /etc/nginx/nginx.conf
-COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
