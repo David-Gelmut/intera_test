@@ -49,12 +49,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # 3. Настройка рабочей директории
 WORKDIR /var/www
 
-# 6. КОПИРУЕМ файлы проекта (сначала только для Composer, чтобы закешировать слои)
-COPY composer.json ./
-
-# 7. Запускаем установку зависимостей внутри контейнера
-RUN composer install --no-dev --optimize-autoloader --no-scripts
-
 # 4. Копируем исходный код проекта (включая локальный vendor и public/build)
 COPY . /var/www
 
@@ -76,6 +70,9 @@ RUN chmod 777 /tmp \
 # 7. Настройка Nginx
 RUN rm -rf /etc/nginx/http.d/default.conf && rm -rf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# 8. Запускаем установку зависимостей внутри контейнера
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 EXPOSE 80
 
