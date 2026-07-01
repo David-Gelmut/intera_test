@@ -49,7 +49,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # 3. Настройка рабочей директории
 WORKDIR /var/www
 
-# 4. Копируем исходный код проекта (включая локальный vendor и public/build)
+# 6. Копирование зависимостей (Docker возьмет их из правильного контекста)
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# 4. Копируем исходный код проекта (включая локальный vendor)
 COPY . .
 
 # 5. Создаем структуру папок Laravel и выставляем безопасные права www-data
@@ -72,7 +76,7 @@ RUN rm -rf /etc/nginx/http.d/default.conf && rm -rf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # 8. Запускаем установку зависимостей внутри контейнера
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+
 
 EXPOSE 80
 
