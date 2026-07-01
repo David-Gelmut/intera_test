@@ -95,7 +95,7 @@
               />
             </div>
             <!-- Быстрая фронтенд-подсказка, если пароли не совпадают -->
-            <p v-if="isPasswordMismatch" class="text-xs text-rose-600 font-medium">Пароли в данный момент не совпадают.</p>
+<!--            <p v-if="isPasswordMismatch" class="text-xs text-rose-600 font-medium">Пароли в данный момент не совпадают.</p>-->
           </div>
 
           <!-- Кнопка отправки -->
