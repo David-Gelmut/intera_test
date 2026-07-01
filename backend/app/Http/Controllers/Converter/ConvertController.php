@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Converter;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ConvertRequest;
 use App\Services\Convert\ConvertService;
 use Illuminate\Http\JsonResponse;

@@ -1,9 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\ConvertController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Converter\ConvertController;
+use App\Http\Controllers\Parser\CompanyController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', [AuthController::class, 'login'])->name('login');

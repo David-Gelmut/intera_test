@@ -1,10 +1,5 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\ConvertController;
-use Illuminate\Support\Facades\Route;
-
 /*Route::get('/', function () {
     return view('welcome');
 });
