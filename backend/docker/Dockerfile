@@ -43,6 +43,9 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-install redis \
     && apk del .build-deps
 
+# Устанавливаем Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 # 3. Настройка рабочей директории
 WORKDIR /var/www
 
@@ -67,6 +70,9 @@ RUN chmod 777 /tmp \
 # 7. Настройка Nginx
 RUN rm -rf /etc/nginx/http.d/default.conf && rm -rf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# Запускаем установку зависимостей внутри правильного окружения
+RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 80
 
