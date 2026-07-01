@@ -52,7 +52,7 @@ WORKDIR /var/www
 # 4. Копируем исходный код проекта (включая локальный vendor)
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+#RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # 5. Создаем структуру папок Laravel и выставляем безопасные права www-data
 RUN mkdir -p /var/www/storage/framework/cache/data \
