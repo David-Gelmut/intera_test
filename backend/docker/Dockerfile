@@ -24,9 +24,12 @@ RUN apk add --no-cache \
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
+RUN apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        coreutils \
+    && mkdir -p /usr/src/php/ext/redis \
+    && curl -fsSL https://php.net | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
+    && docker-php-ext-install redis \
     && apk del .build-deps
 
 # 3. Настройка рабочей директории
