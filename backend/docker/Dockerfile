@@ -50,7 +50,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # 6. КОПИРУЕМ файлы проекта (сначала только для Composer, чтобы закешировать слои)
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
 # 7. Запускаем установку зависимостей внутри контейнера
 RUN composer install --no-dev --optimize-autoloader --no-scripts
