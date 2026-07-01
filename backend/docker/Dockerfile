@@ -17,12 +17,23 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont\
     tesseract-ocr \
-    tesseract-ocr-data-rus
+    tesseract-ocr-data-rus  \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    oniguruma-dev \
+    libxml2-dev \
 
 
 # 2. Установка PHP расширений
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    dom
 
 RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
