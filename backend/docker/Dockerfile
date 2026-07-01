@@ -50,7 +50,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # 4. Копируем исходный код проекта (включая локальный vendor и public/build)
-COPY . /var/www
+COPY . .
 
 # 5. Создаем структуру папок Laravel и выставляем безопасные права www-data
 RUN mkdir -p /var/www/storage/framework/cache/data \
