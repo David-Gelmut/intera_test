@@ -8,6 +8,7 @@ axios.defaults.withCredentials = true;
 axios.defaults.withXSRFToken = true;
 //axios.defaults.baseURL = 'http://localhost:8000';
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+/*
 axios.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -18,3 +19,4 @@ axios.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+*/

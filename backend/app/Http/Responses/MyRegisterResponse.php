@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Http\Responses;
+
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\JsonResponse;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+
+class MyRegisterResponse implements RegisterResponseContract
+{
+
+    #[\Override] public function toResponse($request): JsonResponse
+    {
+        $user = $request->user();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        event(new Registered($user));
+
+        return new JsonResponse([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
+        ], 201);
+    }
+}

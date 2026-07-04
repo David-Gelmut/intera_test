@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', {
 
             try {
                 await this.getCsrfCookie();
-                const response = await axios.post('/api/auth/login', credentials);
+                const response = await axios.post('/api/login', credentials);
                 this.user = response.data.user;
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             } catch (error) {
@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', {
         },
         async logout() {
             try {
-                await axios.post('/api/auth/logout');
+                await axios.post('/api/logout');
             } catch (error) {
                 console.error('Ошибка при логауте на сервере:', error);
             } finally {
@@ -37,7 +37,8 @@ export const useAuthStore = defineStore('auth', {
         async register(credentials) {
             try {
                 await this.getCsrfCookie();
-                const response = await axios.post('/api/auth/register', credentials);
+                const response = await axios.post('/api/register', credentials);
+                console.log(response);
                 this.user = response.data.user;
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             } catch (error) {
