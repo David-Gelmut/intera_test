@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import {defineStore} from 'pinia';
 import axios from 'axios';
 
 export const useAuthStore = defineStore('auth', {
@@ -6,7 +6,8 @@ export const useAuthStore = defineStore('auth', {
         user: JSON.parse(localStorage.getItem('user')) || null,
     }),
     getters: {
-        isAuthenticated: (state) => !!state.user,
+        isAuthenticated: (state) => state.user,
+        isVerified: (state) => state.user && state.user.email_verified_at !== undefined && state.user.email_verified_at !== null
     },
     actions: {
         async getCsrfCookie() {
@@ -38,7 +39,7 @@ export const useAuthStore = defineStore('auth', {
             try {
                 await this.getCsrfCookie();
                 const response = await axios.post('/api/register', credentials);
-                console.log(response);
+                //console.log(response);
                 this.user = response.data.user;
                 localStorage.setItem('user', JSON.stringify(response.data.user));
             } catch (error) {

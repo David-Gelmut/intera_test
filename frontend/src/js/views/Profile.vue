@@ -167,11 +167,14 @@
 <script setup>
 import {ref, reactive, computed, onMounted} from 'vue';
 import axios from 'axios';
+import {useAuthStore} from "../store/auth.js";
+
+const authStore = useAuthStore();
 
 // Заглушка стора авторизации. Замените на импорт вашего реального Pinia/Vuex стора
-const authStore = reactive({
+/*const authStore = reactive({
   user: {name: 'Иван Иванов', email: 'admin@test.ru'}
-});
+});*/
 
 const isProfileLoading = ref(false);
 const profileSuccess = ref(false);
@@ -189,15 +192,20 @@ const profileForm = reactive({
 const passwordForm = reactive({
   current_password: '', password: '', password_confirmation: ''
 });
+
 // Вычисление первых букв имени для аватара
 const userInitials = computed(() => {
   if (!authStore.user?.name) return 'U';
   return authStore.user.name.split(' ').map(n => n[0]).join('').slice(0, 2);
-});// Фронтенд проверка совпадения новых пароле
+});
+
+// Фронтенд проверка совпадения новых пароле
 const isPasswordMismatch = computed(() => {
   return passwordForm.password_confirmation.length > 0 && passwordForm.password !== passwordForm.password_confirmation;
-});// Инициализация формы текущими данными
-onMounted(() => {
+});
+
+// Инициализация формы текущими данными
+onMounted( async () => {
   if (authStore.user) {
     profileForm.name = authStore.user.name;
     profileForm.email = authStore.user.email;
@@ -208,11 +216,12 @@ const handleUpdateProfile = async () => {
   errors.value = {};
   profileSuccess.value = false;
   try {
-    const response = await axios.put('/api/user/profile-information', profileForm, {withCredentials: true});
+    const response = await axios.put('/api/user/profile-information', profileForm);
     if (response.status === 200) {
       authStore.user.name = profileForm.name;
       authStore.user.email = profileForm.email;
       profileSuccess.value = true;
+      localStorage.setItem('user', JSON.stringify(authStore.user));
     }
   } catch (err) {
     if (err.response && err.response.status === 422) {
@@ -222,13 +231,14 @@ const handleUpdateProfile = async () => {
     isProfileLoading.value = false;
   }
 };
+
 const handleChangePassword = async () => {
   if (isPasswordMismatch.value) return;
   isPasswordLoading.value = true;
   passwordErrors.value = {};
   passwordSuccess.value = false;
   try {
-    const response = await axios.put('/api/user/password', passwordForm, {withCredentials: true});
+    const response = await axios.put('/api/user/password', passwordForm);
     if (response.status === 200) {
       passwordSuccess.value = true;
       passwordForm.current_password = '';

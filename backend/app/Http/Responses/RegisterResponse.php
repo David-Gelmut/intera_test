@@ -6,9 +6,8 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 
-class MyRegisterResponse implements RegisterResponseContract
+class RegisterResponse implements RegisterResponseContract
 {
-
     #[\Override] public function toResponse($request): JsonResponse
     {
         $user = $request->user();

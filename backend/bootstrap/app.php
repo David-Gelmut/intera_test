@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
+        // ЕСЛИ ПРОИСХОДИТ ОШИБКА АВТОРИЗАЦИИ — ВОЗВРАЩАЕМ JSON ВМЕСТО РЕДИРЕКТА
+        $exceptions->shouldRenderJsonWhen(function (Request $request) {
+            return true; // Всегда возвращать JSON при ошибках
+        });
        /* $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('auth/*'),
         );*/

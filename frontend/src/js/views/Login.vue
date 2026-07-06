@@ -1,23 +1,3 @@
-<!--<template>
-    <div class="login-page">
-        <div class="login-card">
-            <h2>Авторизация</h2>
-            <form @submit.prevent="handleLogin">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input v-model="form.email" type="email" placeholder="admin@test.ru"/>
-                </div>
-                <div class="form-group">
-                    <label>Пароль</label>
-                    <input v-model="form.password" type="password" placeholder="••••••••"/>
-                </div>
-                <button type="submit">Войти</button>
-            </form>
-            <div v-if="error" class="error-alert">{{ error }}</div>
-        </div>
-    </div>
-</template>-->
-
 <template>
   <div class="min-h-screen flex flex-col justify-center items-center bg-slate-50 px-4 sm:px-6 lg:px-8 font-sans text-slate-800 antialiased">
     <div class="w-full max-w-md space-y-8">
@@ -93,6 +73,12 @@
           </router-link>
         </div>
 
+        <div class="mt-5 text-center text-sm">
+          <router-link to="/forgot-password" class="ml-1 font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+            Восстановить пароль
+          </router-link>
+        </div>
+
         <!-- Блок ошибки -->
         <div v-if="error" class="mt-4 p-4 bg-rose-50 border border-rose-100 text-sm text-rose-700 rounded-lg flex gap-2 items-start animate-fade-in">
           <svg class="h-5 w-5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -105,8 +91,6 @@
     </div>
   </div>
 </template>
-
-
 <script setup>
 import { ref } from 'vue';
 import { useAuthStore } from '../store/auth.js';
@@ -123,7 +107,7 @@ const handleLogin = async () => {
 
     try {
         await authStore.login(form.value);
-        router.push('/convert');
+        router.push('/profile');
     } catch (err) {
         error.value = err.response?.data?.message;
     }

@@ -6,17 +6,16 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.headers.common['Accept'] = 'application/json';
 axios.defaults.withCredentials = true;
 axios.defaults.withXSRFToken = true;
-//axios.defaults.baseURL = 'http://localhost:8000';
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-/*
+
 axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    response => response, // Если всё хорошо, просто пропускаем ответ
+    error => {
+        // Если сервер говорит, что мы не авторизованы (сессия умерла)
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            localStorage.removeItem('user'); // Чистим фронтенд
+            window.location.href = '/login';  // Перенаправляем на логин
         }
         return Promise.reject(error);
     }
 );
-*/
