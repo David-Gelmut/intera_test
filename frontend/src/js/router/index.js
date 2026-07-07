@@ -13,7 +13,7 @@ import AdminPanel from "../views/Admin/AdminPanel.vue";
 import Dashboard from "../views/Dashboard.vue";
 import BannedPage from "../views/BannedPage.vue";
 import MainLayout from "../views/Layouts/MainLayout.vue";
-
+import Users from "../views/Admin/Users.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -47,6 +47,17 @@ const router = createRouter({
                     name: 'Dashboard',
                     component: Dashboard,
                     meta: {auth: true, verified: true, allowedRoles: ['user', 'admin']}
+                },
+                {
+                    path: '/users',
+                    name: 'Users',
+                    component: Users,
+                    meta:
+                        {
+                            auth: true,
+                            verified: true,
+                            allowedRoles: ['admin']
+                        }
                 },
             ]
         },
@@ -108,7 +119,7 @@ const router = createRouter({
                     allowedRoles: ['user', 'admin']
                 }
         },
-        {
+      /*  {
             path: '/admin/panel',
             name: 'AdminPanel',
             component: AdminPanel,
@@ -117,7 +128,7 @@ const router = createRouter({
                 verified: true,
                 allowedRoles: ['admin']
             }
-        },
+        },*/
         {
             path: '/banned',
             name: 'BannedPage',
@@ -141,10 +152,10 @@ router.beforeEach((to, from, next) => {
     const isActive = authStore.isActive;
     const userRole = authStore.userRole;
 
-   // console.log(to.name);
+    // console.log(to.name);
 
     // 1. ПРОВЕРКА НА СТАТУС: Если юзер залогинен, но НЕ активен
-    if (isAuthenticated && !isActive && to.name !== 'BannedPage' /*&& to.name !== 'EmailVerify' && isVerified */ ) {
+    if (isAuthenticated && !isActive && to.name !== 'BannedPage' /*&& to.name !== 'EmailVerify' && isVerified */) {
         return next({name: 'BannedPage'});
     }
 

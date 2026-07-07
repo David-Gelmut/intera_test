@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Converter\ConvertController;
@@ -29,8 +30,14 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
     Route::post('/companies', [CompanyController::class, 'store'])->name('company.store');
     Route::post('/convert', ConvertController::class);
+
+    Route::middleware('role:admin')->group(function (){
+        Route::get('/users', [UserController::class,'index']);
+        Route::put('/users/{id}', [UserController::class, 'update']);
+    });
 });
 
 
