@@ -39,7 +39,7 @@ onMounted(async () => {
       localStorage.setItem('user', JSON.stringify(userResponse.data));
       // Через 2 секунды перекидываем в профиль
       setTimeout(() => {
-        router.push('/profile');
+        window.location.href = '/profile';
       }, 2000);
     }
 
