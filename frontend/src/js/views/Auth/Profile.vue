@@ -167,7 +167,7 @@
 <script setup>
 import {ref, reactive, computed, onMounted} from 'vue';
 import axios from 'axios';
-import {useAuthStore} from "../store/auth.js";
+import {useAuthStore} from "../../store/auth.js";
 
 const authStore = useAuthStore();
 
@@ -218,10 +218,14 @@ const handleUpdateProfile = async () => {
   try {
     const response = await axios.put('/api/user/profile-information', profileForm);
     if (response.status === 200) {
-      authStore.user.name = profileForm.name;
+     /* authStore.user.name = profileForm.name;
       authStore.user.email = profileForm.email;
       profileSuccess.value = true;
-      localStorage.setItem('user', JSON.stringify(authStore.user));
+      localStorage.setItem('user', JSON.stringify(authStore.user));*/
+      const userResponse = await axios.get('/api/user');
+      authStore.user = userResponse.data;
+      localStorage.setItem('user', JSON.stringify(userResponse.data));
+      profileSuccess.value = true;
     }
   } catch (err) {
     if (err.response && err.response.status === 422) {

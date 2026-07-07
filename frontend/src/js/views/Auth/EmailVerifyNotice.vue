@@ -70,7 +70,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import {useAuthStore} from "../store/auth.js";
+import {useAuthStore} from "../../store/auth.js";
 
 const authStore = useAuthStore();
 const router = useRouter();

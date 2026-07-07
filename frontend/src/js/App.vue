@@ -2,7 +2,7 @@
   <div class="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-800 antialiased">
 
     <!-- Верхняя шапка для мобильных устройств (показывается только авторизованным) -->
-    <header
+<!--    <header
         v-if="authStore.isAuthenticated && authStore.isVerified"
         class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-xs lg:hidden">
 
@@ -16,7 +16,7 @@
         <span>City Of Masters</span>
       </div>
 
-      <!-- Кнопка открытия мобильного меню -->
+      &lt;!&ndash; Кнопка открытия мобильного меню &ndash;&gt;
       <button
           @click="isMobileMenuOpen = true"
           class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus:outline-none">
@@ -24,7 +24,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-    </header>
+    </header>-->
 
     <!-- Затемнение заднего фона при открытом мобильном меню -->
     <div
@@ -33,12 +33,12 @@
         class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden"></div>
 
     <!-- Боковая навигация (Sidebar) — адаптивная -->
-    <aside
-        v-if="authStore.isVerified"
+<!--    <aside
+        v-if="authStore.isAuthenticated && authStore.isVerified"
         class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white shadow-xs transition-transform duration-300 lg:translate-x-0"
         :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
 
-      <!-- Логотип / Название проекта -->
+      &lt;!&ndash; Логотип / Название проекта &ndash;&gt;
       <div class="flex h-16 items-center justify-between border-b border-slate-100 px-6">
 
         <div class="flex items-center gap-2.5 font-bold text-slate-900 tracking-tight">
@@ -51,7 +51,7 @@
           <span>City Of Masters</span>
         </div>
 
-        <!-- Кнопка закрытия внутри сайдбара (только для мобилок) -->
+        &lt;!&ndash; Кнопка закрытия внутри сайдбара (только для мобилок) &ndash;&gt;
         <button @click="isMobileMenuOpen = false" class="text-slate-400 hover:text-slate-600 lg:hidden">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -60,7 +60,7 @@
 
       </div>
 
-      <!-- Меню навигации -->
+      &lt;!&ndash; Меню навигации &ndash;&gt;
       <nav class="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
         <router-link
             v-for="route in menuRoutes"
@@ -77,9 +77,9 @@
         </router-link>
       </nav>
 
-      <!-- Подвал сайдбара с Профилем и кнопкой Выхода -->
+      &lt;!&ndash; Подвал сайдбара с Профилем и кнопкой Выхода &ndash;&gt;
       <div class="border-t border-slate-100 p-4 space-y-3 bg-white">
-        <!-- Блок Профиля -->
+        &lt;!&ndash; Блок Профиля &ndash;&gt;
         <router-link
             to="/profile"
             @click="isMobileMenuOpen = false"
@@ -101,7 +101,7 @@
 
         </router-link>
 
-        <!-- Кнопка Выхода -->
+        &lt;!&ndash; Кнопка Выхода &ndash;&gt;
         <button
             @click="handleLogout"
             class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20">
@@ -112,9 +112,9 @@
           Выйти
         </button>
       </div>
-    </aside>
+    </aside>-->
 
-    <!-- Основной контейнер контента и нижнего футера -->
+    <!-- Основной контейнер контента -->
     <div
         class="flex flex-1 flex-col transition-all duration-300"
         :class="{ 'lg:pl-64': authStore.isAuthenticated && authStore.isVerified }">
@@ -129,50 +129,45 @@
           </transition>
         </router-view>
       </main>
-
-      <!-- Подвал сайта (Footer) с контактами -->
-      <footer v-if="authStore.isVerified" class="mt-auto border-t border-slate-200 bg-white py-6 px-4 md:px-8 text-center sm:text-left">
-        <div class="max-w-7xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs md:text-sm text-slate-500">
-          <div>
-            <p class="font-semibold text-slate-700">&copy; {{ currentYear }} City Of Masters. Все права защищены.</p>
-          </div>
-
-          <!-- Контактные данные -->
-          <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
-            <a href="mailto:support@interamaps.com" class="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              davidgelmut12345@gmail.com
-            </a>
-            <a href="tel:+78005553535" class="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-              8 (963) 882-48-00
-            </a>
-          </div>
-        </div>
-      </footer>
-
-
     </div>
+
+    <!-- Подвал сайта (Footer) с контактами -->
+<!--    <footer v-if="authStore.isAuthenticated && authStore.isVerified" class="mt-auto border-t border-slate-200 bg-white py-6 px-4 md:px-8 text-center sm:text-left">
+      <div class="max-w-7xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs md:text-sm text-slate-500">
+        <div>
+          <p class="font-semibold text-slate-700">&copy; {{ currentYear }} City Of Masters. Все права защищены.</p>
+        </div>
+
+        &lt;!&ndash; Контактные данные &ndash;&gt;
+        <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+          <a href="mailto:support@interamaps.com" class="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            davidgelmut12345@gmail.com
+          </a>
+          <a href="tel:+78005553535" class="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            8 (963) 882-48-00
+          </a>
+        </div>
+      </div>
+    </footer>-->
+
 
   </div>
 </template>
 <script setup>
 import { useAuthStore } from './store/auth.js';
-import { useRouter } from 'vue-router';
 import { computed, ref } from 'vue'
-
+//import { useRouter } from 'vue-router';
 const authStore = useAuthStore();
-const router = useRouter();
-
-
-// Состояние открытия мобильного меню
 const isMobileMenuOpen = ref(false);
 
-// Текущий год для футера
+//const router = useRouter();
+/*// Текущий год для футера
 const currentYear = computed(() => new Date().getFullYear());
 
 const menuRoutes = computed(() => {
@@ -189,7 +184,7 @@ const userInitials = computed(() => {
 const handleLogout = async () => {
     await authStore.logout();
     router.push('/login');
-};
+};*/
 </script>
 <style>
 .fade-enter-active,

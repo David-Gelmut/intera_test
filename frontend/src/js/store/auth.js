@@ -6,8 +6,10 @@ export const useAuthStore = defineStore('auth', {
         user: JSON.parse(localStorage.getItem('user')) || null,
     }),
     getters: {
-        isAuthenticated: (state) => state.user,
-        isVerified: (state) => state.user && state.user.email_verified_at !== undefined && state.user.email_verified_at !== null
+        isAuthenticated: (state) => !!state.user,
+        isVerified: (state) => state.user && state.user.email_verified_at !== undefined && state.user.email_verified_at !== null,
+        userRole: (state) => state.user ? state.user.role : null,
+        isActive: (state) => state.user && state.user.status === 'active'
     },
     actions: {
         async getCsrfCookie() {

@@ -11,11 +11,18 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:
 axios.interceptors.response.use(
     response => response, // Если всё хорошо, просто пропускаем ответ
     error => {
-        // Если сервер говорит, что мы не авторизованы (сессия умерла)
+        // Сессия умерла
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem('user'); // Чистим фронтенд
-            window.location.href = '/login';  // Перенаправляем на логин
+            localStorage.removeItem('user');
+            window.location.href = '/login';
         }
+
+        // Аккаунт заблокирован администратором
+        if (error.response.status === 403) {
+            localStorage.removeItem('user'); // Очищаем данные фронта
+            window.location.href = '/banned'; // Отправляем на страницу блокировки
+        }
+
         return Promise.reject(error);
     }
 );
