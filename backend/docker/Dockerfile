@@ -36,7 +36,7 @@ RUN docker-php-ext-install \
     dom
 
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && curl -fsSLk https://php.net -o redis.tgz \
+    && curl -fsSLk https://pecl.php.net/get/redis -o redis.tgz \
     && pecl install redis.tgz \
     && rm redis.tgz \
     && docker-php-ext-enable redis \
