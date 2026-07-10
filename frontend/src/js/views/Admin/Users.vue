@@ -62,9 +62,9 @@
                   :disabled="isCurrentUser(user.id)"
                   class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"
               >
-                <option :value="user">User</option>
-                <option :value="admin">Admin</option>
-                <option :value="manager">Manager</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
               </select>
             </td>
 
