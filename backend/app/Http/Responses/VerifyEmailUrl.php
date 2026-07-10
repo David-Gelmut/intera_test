@@ -43,6 +43,10 @@ class VerifyEmailUrl
             ]
         );
 
+        if (config('app.env') === 'production') {
+            $temporarySignedUrl = str_replace('http://', 'https://', $temporarySignedUrl);
+        }
+
         // 2. Указываем адрес вашего Vue-фронтенда
         $frontendUrl = env('FRONTEND_URL') . '/email-verify';
 
