@@ -35,13 +35,18 @@ RUN docker-php-ext-install \
     gd \
     dom
 
-RUN apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS \
-        coreutils \
-    && mkdir -p /usr/src/php/ext/redis \
-    && curl -fsSLk https://pecl.php.net/get/redis | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
-    && docker-php-ext-install redis \
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && apk del .build-deps
+
+# RUN apk add --no-cache --virtual .build-deps \
+#         $PHPIZE_DEPS \
+#         coreutils \
+#     && mkdir -p /usr/src/php/ext/redis \
+#     && curl -fsSL https://pecl.php.net/get/redis | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
+#     && docker-php-ext-install redis \
+#     && apk del .build-deps
 
 # Устанавливаем Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
