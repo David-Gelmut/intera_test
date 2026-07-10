@@ -10,7 +10,7 @@ class VerifyEmailUrl
     /**
      * Генерирует кастомную ссылку для фронтенда Vue.
      *
-     * @param  mixed  $notifiable  Модель пользователя (User)
+     * @param mixed $notifiable Модель пользователя (User)
      * @return string
      */
     public function __invoke($notifiable)
@@ -44,7 +44,7 @@ class VerifyEmailUrl
         );
 
         // 2. Указываем адрес вашего Vue-фронтенда
-        $frontendUrl = 'http://localhost:5173/email-verify';
+        $frontendUrl = env('FRONTEND_URL') . '/email-verify';
 
         // 3. Упаковываем всю ссылку бэкенда в query-параметр для фронтенда
         // В почту улетит: http://localhost:3000/email-verify?url=http%3A%2F%2Flocalhost%3A8000%2Fapi%2Femail%2Fverify%2F...
