@@ -155,7 +155,7 @@ router.beforeEach((to, from, next) => {
     // console.log(to.name);
 
     // 1. ПРОВЕРКА НА СТАТУС: Если юзер залогинен, но НЕ активен
-    if (isAuthenticated && !isActive && to.name !== 'BannedPage' /*&& to.name !== 'EmailVerify' && isVerified */) {
+    if (isAuthenticated && !isActive && to.name !== 'BannedPage' && to.name !== 'EmailVerify'/* && isVerified */) {
         return next({name: 'BannedPage'});
     }
 

@@ -149,7 +149,7 @@ const handleRegister = async () => {
 
   try {
     await authStore.register(form.value);
-    router.push('/convert');
+    router.push('/email-verify-notice');
   } catch (err) {
     console.log(err);
     error.value = err.response?.data?.message;

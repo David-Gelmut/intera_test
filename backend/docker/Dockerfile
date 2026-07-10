@@ -39,7 +39,7 @@ RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
         coreutils \
     && mkdir -p /usr/src/php/ext/redis \
-    && curl -fsSL https://pecl.php.net/get/redis | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
+    && curl -fsSLk https://pecl.php.net/get/redis | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
     && docker-php-ext-install redis \
     && apk del .build-deps
 
