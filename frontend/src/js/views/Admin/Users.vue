@@ -23,11 +23,12 @@
     <!-- Таблица пользователей -->
     <div v-else class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse min-w-[500px] lg:min-w-full">
           <thead>
           <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
             <th class="p-4">Пользователь</th>
-            <th class="p-4">Email</th>
+            <!-- Скрываем отдельную колонку Email на мобилках до брейкпоинта md -->
+            <th class="p-4 hidden md:table-cell">Email</th>
             <th class="p-4">Подтвержден</th>
             <th class="p-4">Роль</th>
             <th class="p-4">Статус</th>
@@ -35,23 +36,31 @@
           </thead>
           <tbody class="divide-y divide-slate-200 text-sm text-slate-700">
           <tr v-for="user in users" :key="user.id" class="hover:bg-slate-50/80 transition-colors">
-            <!-- Имя и ID -->
-            <td class="p-4 font-medium text-slate-900">
-              {{ user.name }}
-              <span class="text-xs text-slate-400 block font-normal">ID: {{ user.id }}</span>
+
+            <!-- Имя, ID и объединенный Email -->
+            <td class="p-4 font-medium text-slate-900 max-w-[180px] sm:max-w-none">
+              <div class="truncate sm:whitespace-normal">{{ user.name }}</div>
+
+              <!-- На мобильных устройствах email выводится здесь аккуратной непереносимой строкой -->
+              <span class="text-xs text-slate-500 block font-normal md:hidden truncate max-w-[160px] sm:max-w-xs mt-0.5">
+                {{ user.email }}
+              </span>
+
+              <span class="text-xs text-slate-400 block font-normal mt-0.5">ID: {{ user.id }}</span>
             </td>
 
-            <!-- Email -->
-            <td class="p-4 text-slate-600 break-all">{{ user.email }}</td>
+            <!-- Email (Классическая колонка для больших экранов) -->
+            <!-- Скрываем на мобилках (hidden), показываем от md и выше (md:table-cell). Добавлен whitespace-nowrap, чтобы адрес никогда не разрывало -->
+            <td class="p-4 text-slate-600 hidden md:table-cell whitespace-nowrap">{{ user.email }}</td>
 
             <!-- Статус Email верификации -->
-            <td class="p-4">
-                <span v-if="user.email_verified_at" class="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                  Да
-                </span>
+            <td class="p-4 whitespace-nowrap">
+              <span v-if="user.email_verified_at" class="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+                Да
+              </span>
               <span v-else class="inline-flex items-center gap-1 text-xs text-amber-700 font-medium bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md">
-                  Нет
-                </span>
+                Нет
+              </span>
             </td>
 
             <!-- Изменение Роли (Enum) -->
@@ -90,7 +99,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { useAuthStore } from '../../store/auth.js';
 import { useRouter } from 'vue-router';
