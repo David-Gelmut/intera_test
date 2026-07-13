@@ -154,6 +154,10 @@ router.beforeEach((to, from, next) => {
         return next({name: 'BannedPage'});
     }
 
+    if (isAuthenticated && isActive && isVerified && to.name === 'EmailVerifyNotice') {
+        return next({name: 'Profile'});
+    }
+
     if (to.matched.some(record => record.meta.guest) && isAuthenticated) {
         return next({name: 'Profile'});
     }
