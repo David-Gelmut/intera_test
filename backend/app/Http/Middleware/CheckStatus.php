@@ -16,12 +16,6 @@ class CheckStatus
      */
     public function handle(Request $request, Closure $next): Response
     {
-        /*return response()->json([
-            'message' => 'Ваш аккаунт заблокирован или неактивен.',
-            'user' => $request->user()
-
-        ], 403);*/
-        // Проверяем, залогинен ли юзер и активен ли он
         if ($request->user() && $request->user()->status !== 'active') {
             auth()->guard('web')->logout();
             $request->session()->invalidate();

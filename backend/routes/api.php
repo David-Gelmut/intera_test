@@ -1,25 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Converter\ConvertController;
 use App\Http\Controllers\Parser\CompanyController;
-use App\Models\User;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
-use Laravel\Fortify\Http\Controllers\ProfileInformationController;
-
-/*Route::middleware(['auth:sanctum','check.status'])->get('/user', function (Request $request) {
-    return $request->user();
-});*/
-
-/*Route::middleware(['auth:sanctum', 'check.status'])->group(function (){
-
-    Route::put('api/user/profile-information',[ProfileInformationController::class,'update'])->name('user-profile-information.update');
-});*/
 
 Route::get('/api/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
     ->middleware(['signed'])
@@ -39,10 +25,6 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
         Route::put('/users/{id}', [UserController::class, 'update']);
     });
 });
-
-
-
-
 
 //Route::middleware('auth:sanctum')->group(function () {
 

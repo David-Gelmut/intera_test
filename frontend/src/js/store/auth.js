@@ -4,6 +4,7 @@ import axios from 'axios';
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: JSON.parse(localStorage.getItem('user')) || null,
+        isMobileMenuOpen: false,
     }),
     getters: {
         isAuthenticated: (state) => !!state.user,
@@ -14,6 +15,11 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         async getCsrfCookie() {
             await axios.get('/sanctum/csrf-cookie');
+        },
+        async getUser(){
+            const userResponse = await axios.get('/api/user');
+            authStore.user = userResponse.data;
+            localStorage.setItem('user', JSON.stringify(userResponse.data));
         },
         async login(credentials) {
 
@@ -41,13 +47,20 @@ export const useAuthStore = defineStore('auth', {
             try {
                 await this.getCsrfCookie();
                 const response = await axios.post('/api/register', credentials);
-                //console.log(response);
                 this.user = response.data.user;
                 localStorage.setItem('user', JSON.stringify(response.data.user));
+
             } catch (error) {
                 console.error('Ошибка при регистрации на сервере:', error);
                 throw error;
             }
+        },
+        toggleMobileMenu() {
+            this.isMobileMenuOpen = !this.isMobileMenuOpen;
+        },
+
+        closeMobileMenu() {
+            this.isMobileMenuOpen = false;
         }
     }
 });

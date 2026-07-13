@@ -16,7 +16,7 @@
 
     <!-- Кнопка открытия мобильного меню -->
     <button
-        @click="isMobileMenuOpen = true"
+        @click.prevent="authStore.toggleMobileMenu"
         class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus:outline-none">
       <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
@@ -26,11 +26,7 @@
 </template>
 <script setup>
 import { useAuthStore } from '../store/auth.js';
-import { useRouter } from 'vue-router';
-import { computed, ref } from 'vue'
 
 const authStore = useAuthStore();
-const router = useRouter();
-const isMobileMenuOpen = ref(false);
 
 </script>

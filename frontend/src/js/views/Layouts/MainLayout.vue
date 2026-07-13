@@ -1,14 +1,10 @@
+
 <template>
-  <div class="flex min-h-screen bg-slate-50 font-sans">
-    <Sidebar />
-
+  <Sidebar />
+  <div class="flex flex-col min-h-screen bg-slate-50 font-sans">
+    <Header />
     <div class="flex flex-col flex-1">
-
-      <Header />
-
-      <div
-          class="flex flex-1 flex-col transition-all duration-300"
-          :class="{ 'lg:pl-64': authStore.isAuthenticated && authStore.isVerified }">
+      <div class="flex flex-1 flex-col transition-all duration-300">
         <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           <router-view v-slot="{ Component }">
             <transition
@@ -20,11 +16,9 @@
           </router-view>
         </main>
       </div>
-
-      <Footer />
-
     </div>
   </div>
+  <Footer />
 </template>
 <script setup>
 import Sidebar from '../../components/Sidebar.vue';
@@ -34,34 +28,6 @@ import { useAuthStore } from '../../store/auth.js';
 
 const authStore = useAuthStore();
 
-/*import { useRouter } from 'vue-router';
-import { computed, ref } from 'vue'
-
-
-const router = useRouter();
-
-
-// Состояние открытия мобильного меню
-const isMobileMenuOpen = ref(false);
-
-// Текущий год для футера
-const currentYear = computed(() => new Date().getFullYear());
-
-const menuRoutes = computed(() => {
-  return router.getRoutes().filter(route => route.meta?.auth && !route.meta?.hidden)
-})
-
-// Вычисляемое свойство для первой буквы имени (для круглого аватара)
-const userInitials = computed(() => {
-  if (!authStore.user?.name) return 'U';
-  // Берем первую букву имени
-  return authStore.user.name.charAt(0);
-});
-
-const handleLogout = async () => {
-  await authStore.logout();
-  router.push('/login');
-};*/
 </script>
 <style>
 .fade-enter-active,

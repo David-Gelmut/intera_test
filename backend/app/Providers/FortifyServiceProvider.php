@@ -71,29 +71,5 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetPasswordView(new ResetPasswordView());
         ResetPassword::createUrlUsing(new ResetPasswordUrl());
 
-
-       /* // Кастомизируем URL в письме сброса пароля
-        Fortify::resetPasswordView(function ($request) {
-            // Получаем токен и email из запроса Laravel
-            $token = $request->route('token');
-            $email = $request->query('email');
-
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/reset-password';
-
-            $finalUrl = $frontendUrl . '/' . $token . '?email=' . call_user_func('urlencode', $email);
-
-            return redirect()->away($finalUrl);
-        });
-
-        // Исправляем ошибку "Route [password.reset] not defined"
-        // Напрямую говорим Laravel, какую ссылку вставлять в письмо "Забыл пароль"
-        ResetPassword::createUrlUsing(function ($user, string $token) {
-
-            // Базовый URL вашего Vue-приложения
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/reset-password';
-
-            // Собираем ссылку: http://localhost:3000/reset-password/TOKEN?email=USER_EMAIL
-            return $frontendUrl . '/' . $token . '?email=' . call_user_func('urlencode', $user->getEmailForPasswordReset());
-        });*/
     }
 }

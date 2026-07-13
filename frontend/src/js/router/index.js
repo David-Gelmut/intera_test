@@ -105,8 +105,6 @@ const router = createRouter({
                     hidden: true
                 }
         },
-
-        // --- РОУТЫ ДЛЯ ЛЮБЫХ ЗАЛОГИНЕННЫХ ПОЛЬЗОВАТЕЛЕЙ ---
         {
             path: '/email-verify-notice',
             name: 'EmailVerifyNotice',
@@ -152,10 +150,7 @@ router.beforeEach((to, from, next) => {
     const isActive = authStore.isActive;
     const userRole = authStore.userRole;
 
-    // console.log(to.name);
-
-    // 1. ПРОВЕРКА НА СТАТУС: Если юзер залогинен, но НЕ активен
-    if (isAuthenticated && !isActive && to.name !== 'BannedPage' && to.name !== 'EmailVerify'/* && isVerified */) {
+    if (isAuthenticated && !isActive && to.name !== 'BannedPage' && to.name !== 'EmailVerifyNotice') {
         return next({name: 'BannedPage'});
     }
 
@@ -171,16 +166,6 @@ router.beforeEach((to, from, next) => {
         if (to.name === 'EmailVerify') return next();
         return next({name: 'EmailVerifyNotice'});
     }
-
-    // 4. ПРОВЕРКА РОЛЕЙ: Если у роута есть ограничения по ролям
-    if (to.meta.allowedRoles) {
-        const hasRole = to.meta.allowedRoles.includes(userRole);
-        if (!hasRole) {
-            //alert('У вас нет прав для доступа к этой странице!');
-            return next({name: 'Profile'}); // Возвращаем на базовую страницу
-        }
-    }
-
     next();
 });
 
