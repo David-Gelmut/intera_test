@@ -15,12 +15,18 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'register', 'login'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'register',
+        'login',
+        'logout',
+        'broadcasting/auth'
+    ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173'), 'http://davidgelmut.ru'],
-    //'allowed_origins' => ['http://localhost:5173'],
+    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173'), env('APP_URL', 'http://localhost:8000')],
 
     'allowed_origins_patterns' => [],
 

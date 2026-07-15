@@ -9,11 +9,11 @@ import EmailVerify from "../views/Auth/EmailVerify.vue";
 import ForgotPassword from "../views/Auth/ForgotPassword.vue";
 import ResetPassword from "../views/Auth/ResetPassword.vue";
 import EmailVerifyNotice from "../views/Auth/EmailVerifyNotice.vue";
-import AdminPanel from "../views/Admin/AdminPanel.vue";
 import Dashboard from "../views/Dashboard.vue";
 import BannedPage from "../views/BannedPage.vue";
 import MainLayout from "../views/Layouts/MainLayout.vue";
 import Users from "../views/Admin/Users.vue";
+import Chat from "../views/Chat.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -52,13 +52,14 @@ const router = createRouter({
                     path: '/users',
                     name: 'Users',
                     component: Users,
-                    meta:
-                        {
-                            auth: true,
-                            verified: true,
-                            allowedRoles: ['admin']
-                        }
+                    meta: {auth: true, verified: true, allowedRoles: ['admin']}
                 },
+                {
+                    path: 'chat',
+                    name: 'Chat',
+                    component: Chat,
+                    meta: { auth: true, verified: true}
+                }
             ]
         },
         {
@@ -67,7 +68,7 @@ const router = createRouter({
             component: Login,
             meta:
                 {
-                    guest: true,
+                    guest: true,auth: false
                 }
         },
         {
@@ -150,6 +151,10 @@ router.beforeEach((to, from, next) => {
     const isActive = authStore.isActive;
     const userRole = authStore.userRole;
 
+    if (to.path === '/') {
+        return next({name: 'Login'});
+    }
+
     if (isAuthenticated && !isActive && to.name !== 'BannedPage' && to.name !== 'EmailVerifyNotice') {
         return next({name: 'BannedPage'});
     }
@@ -161,11 +166,11 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.guest) && isAuthenticated) {
         return next({name: 'Profile'});
     }
+
     if (to.matched.some(record => record.meta.auth) && !isAuthenticated) {
         return next({name: 'Login'});
     }
 
-    // 3. Исключение для страницы верификации
     if (to.matched.some(record => record.meta.verified) && !isVerified) {
         if (to.name === 'EmailVerify') return next();
         return next({name: 'EmailVerifyNotice'});

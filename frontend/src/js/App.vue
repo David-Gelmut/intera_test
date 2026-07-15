@@ -4,7 +4,7 @@
 
     <!-- Затемнение заднего фона при открытом мобильном меню -->
     <div
-        v-if="authStore.isAuthenticated && authStore.isVerified && isMobileMenuOpen"
+        v-if="authStore.isAuthenticated && authStore.isVerified && authStore.isMobileMenuOpen"
         @click="isMobileMenuOpen = false"
         class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden">
 

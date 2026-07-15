@@ -61,6 +61,6 @@ export const useAuthStore = defineStore('auth', {
 
         closeMobileMenu() {
             this.isMobileMenuOpen = false;
-        }
+        },
     }
 });

@@ -12,6 +12,7 @@
         "chrome-php/chrome": "^1.15",
         "laravel/fortify": "^1.37",
         "laravel/framework": "^13.8",
+        "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "thiagoalessio/tesseract_ocr": "^2.13"

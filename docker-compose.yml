@@ -22,6 +22,8 @@ services:
     depends_on:
       - mysql
       - redis
+    networks:
+      - app-network
 
   queue-worker:
     build:
@@ -44,6 +46,8 @@ services:
     depends_on:
       - mysql
       - redis
+    networks:
+      - app-network
 
   mysql:
     image: mysql:8.0
@@ -60,7 +64,8 @@ services:
       - "3310:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-
+    networks:
+      - app-network
 
   redis:
     image: redis:7-alpine
@@ -71,9 +76,32 @@ services:
       - redis_data:/data
     ports:
       - "6379:6379"
+    networks:
+      - app-network
+
+  reverb:
+    build:
+      context: ./backend/docker
+      dockerfile: Dockerfile # Используем тот же Dockerfile, что и для основного приложения (там уже есть PHP)
+    container_name: yandex_reverb
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - ./backend:/var/www # Мапим папку проекта, чтобы Reverb видел файлы конфигурации
+    ports:
+      - "8080:8080" # Пробрасываем порт наружу, чтобы Vue-браузер мог достучаться
+    depends_on:
+      - mysql
+    networks:
+      - app-network # Обязательно укажите ту же сеть, в которой крутятся app и mysql
 
 volumes:
   mysql_data:
     driver: local
   redis_data:
     driver: local
+
+networks:
+  app-network:
+    driver: bridge

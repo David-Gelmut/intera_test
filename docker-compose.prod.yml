@@ -78,6 +78,23 @@ services:
     networks:
       - app-network
 
+  reverb:
+    build:
+      context: ./backend/docker
+      dockerfile: Dockerfile
+    container_name: yandex_reverb
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - ./backend:/var/www
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
 volumes:
   mysql_data:
     driver: local
