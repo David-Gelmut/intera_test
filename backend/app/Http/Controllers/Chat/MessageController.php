@@ -89,7 +89,8 @@ class MessageController extends Controller
 
 
                 $message->attachments()->create([
-                    'file_path' => Storage::url($path),
+                    'file_path' => Storage::disk('public')->url($path),
+                    //'file_path' => Storage::url($path),
                     'file_name' => $file->getClientOriginalName(),
                     'file_type' => $fileType,
                     'file_size' => $file->getSize(),
