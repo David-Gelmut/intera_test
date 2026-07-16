@@ -39,3 +39,5 @@ frontend/node_modules/
 
 # Директория сборки фронтенда (Vite / Vue)
 frontend/dist/
+
+frontend/.env.production
