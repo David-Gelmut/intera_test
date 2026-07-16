@@ -94,7 +94,7 @@
 
 
     <!-- Правая колонка: Окно переписки -->
-    <div class="flex-1 flex flex-col bg-slate-50/30" :class="chatStore.activeChatId ? 'flex' : 'hidden md:flex'">
+    <div class="flex-1 flex flex-col bg-slate-50/30 max-w-full" :class="chatStore.activeChatId ? 'flex' : 'hidden md:flex'">
 
       <!-- Если чат выбран -->
       <template v-if="chatStore.activeChatId">
