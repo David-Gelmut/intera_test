@@ -1,5 +1,4 @@
 <template>
-
   <div class="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-800 antialiased">
 
     <!-- Затемнение заднего фона при открытом мобильном меню -->
@@ -17,11 +16,8 @@
       <!-- Контент страницы -->
       <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
         <router-view v-slot="{ Component }">
-          <transition
-              name="fade"
-              mode="out-in"
-          >
-            <component :is="Component" />
+          <transition name="fade" mode="out-in">
+            <component :is="Component" transition/>
           </transition>
         </router-view>
       </main>

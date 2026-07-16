@@ -118,16 +118,6 @@ const router = createRouter({
                     allowedRoles: ['user', 'admin']
                 }
         },
-      /*  {
-            path: '/admin/panel',
-            name: 'AdminPanel',
-            component: AdminPanel,
-            meta: {
-                auth: true,
-                verified: true,
-                allowedRoles: ['admin']
-            }
-        },*/
         {
             path: '/banned',
             name: 'BannedPage',

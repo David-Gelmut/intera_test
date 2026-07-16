@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Chat;
 
 use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
+use App\Jobs\CheckUnreadMessageJob;
 use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 
 class MessageController extends Controller
 {
@@ -24,11 +27,22 @@ class MessageController extends Controller
             ], 403);
         }
 
-        // Загружаем сообщения по порядку (от старых к новым) вместе с именами авторов
         $messages = Message::where('chat_id', $chatId)
             ->with('user:id,name')
+            ->with('attachments')
             ->oldest()
             ->get();
+
+        $messages->transform(function ($msg) {
+            if ($msg->text) {
+                try {
+                    $msg->text = Crypt::decryptString($msg->text);
+                } catch (\Exception $e) {
+                    // Если сообщение старое или не зашифровано, оставляем как есть
+                }
+            }
+            return $msg;
+        });
 
         return response()->json($messages);
     }
@@ -39,11 +53,11 @@ class MessageController extends Controller
     public function sendMessage(Request $request, int $chatId): JsonResponse
     {
         $request->validate([
-            'text' => 'required|string|max:5000',
+            'text' => 'nullable|string|max:5000',
+            'files'   => 'nullable|array',
+            'files.*' => 'file|max:102400', // 100MB
         ]);
-        $myId = $request->user()->id;
 
-        // Проверяем, имеет ли пользователь право писать в этот чат
         $hasAccess = $request->user()->chats()->where('chat_id', $chatId)->exists();
 
         if (! $hasAccess) {
@@ -54,13 +68,45 @@ class MessageController extends Controller
 
         $message = Message::create([
             'chat_id' => $chatId,
+           // 'user_id' => auth()->id(),
             'user_id' => $request->user()->id,
-            'text' => $request->text,
+            'text'    => $request->text ? Crypt::encryptString($request->text) : null,
         ]);
 
-        $message->load('user:id,name');
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('chat_attachments', 'public');
+
+                $mime = $file->getMimeType();
+                $fileType = 'file';
+
+                if (str_contains($mime, 'image')) {
+                    $fileType = 'image';
+                } elseif (str_contains($mime, 'video')) {
+                    $fileType = 'video';
+                }
+
+
+                $message->attachments()->create([
+                    'file_path' => Storage::url($path),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_type' => $fileType,
+                    'file_size' => $file->getSize(),
+                    'driver'    => 'local',
+                ]);
+            }
+        }
+
+        $message->load('user:id,name','attachments');
+
+        if ($message->text) {
+            $message->text = Crypt::decryptString($message->text);
+        }
 
         broadcast(new MessageSent($message))->toOthers();
+
+        CheckUnreadMessageJob::dispatch($message)->delay(now()->addMinutes(10));
 
         return response()->json($message);
     }

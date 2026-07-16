@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Chat;
 
+use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
@@ -116,4 +119,34 @@ class ChatController extends Controller
 
         return response()->json(['message' => 'Чат успешно удален.']);
     }
+
+    public function sync(Request $request, $chatId): JsonResponse
+    {
+        $lastId = $request->query('last_id');
+
+        if (!$lastId) {
+            return response()->json([]);
+        }
+
+        // Вытаскиваем сообщения, которые появились в базе позже, чем есть у клиента
+        $newMessages = Message::where('chat_id', $chatId)
+            ->where('id', '>', $lastId)
+            ->with('user') // подгружаем автора сообщения для Vue шаблона
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $newMessages->transform(function ($msg) {
+            if ($msg->text) {
+                try {
+                    $msg->text = Crypt::decryptString($msg->text);
+                } catch (\Exception $e) {
+                    // резервный откат
+                }
+            }
+            return $msg;
+        });
+
+        return response()->json($newMessages);
+    }
+
 }

@@ -1,12 +1,9 @@
 FROM php:8.4-fpm-alpine
 
-# 1. Установка системных пакетов, Nginx и Chromium для парсинга
+# Установка системных пакетов, Nginx и Chromium для парсинга
 RUN apk add --no-cache \
     git \
     curl \
-    libpng-dev \
-    oniguruma-dev \
-    libxml2-dev \
     zip \
     unzip \
     nginx \
@@ -22,10 +19,13 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     freetype-dev \
     oniguruma-dev \
-    libxml2-dev
+    libxml2-dev \
+    linux-headers
 
+# Настройка расширения GD перед установкой
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# 2. Установка PHP расширений
+# Установка PHP расширений
 RUN docker-php-ext-install \
     pdo_mysql \
     mbstring \
@@ -33,7 +33,8 @@ RUN docker-php-ext-install \
     pcntl \
     bcmath \
     gd \
-    dom
+    dom \
+    sockets
 
 COPY redis.tgz /tmp/redis.tgz
 
@@ -80,15 +81,15 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
 # Устанавливаем Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 3. Настройка рабочей директории
+# Настройка рабочей директории
 WORKDIR /var/www
 
-# 4. Копируем исходный код проекта (включая локальный vendor)
+# Копируем исходный код проекта (включая локальный vendor)
 COPY . .
 
 #RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# 5. Создаем структуру папок Laravel и выставляем безопасные права www-data
+# Создаем структуру папок Laravel и выставляем безопасные права www-data
 RUN mkdir -p /var/www/storage/framework/cache/data \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
@@ -97,13 +98,13 @@ RUN mkdir -p /var/www/storage/framework/cache/data \
     && chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# 6. Настройка прав для Nginx и Chromium во временных папках Alpine
+# Настройка прав для Nginx и Chromium во временных папках Alpine
 RUN chmod 777 /tmp \
     && chown -R www-data:www-data /tmp \
     && chown -R www-data:www-data /var/lib/nginx \
     && chown -R www-data:www-data /var/log/nginx
 
-# 7. Настройка Nginx
+# Настройка Nginx
 RUN rm -rf /etc/nginx/http.d/default.conf && rm -rf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 

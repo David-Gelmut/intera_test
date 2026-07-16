@@ -8,12 +8,16 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Crypt;
 
 class MessageSent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public $queue = 'reverb';
 
     /**
      * Create a new event instance.
@@ -50,12 +54,24 @@ class MessageSent implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
+        $decryptedText = '';
+
+        if ($this->message->text) {
+            try {
+                // Расшифровываем перед отправкой в Reverb
+                $decryptedText = Crypt::decryptString($this->message->text);
+            } catch (\Exception $e) {
+                $decryptedText = $this->message->text; // если упало, шлем оригинал
+            }
+        }
+
         return [
             'id' => $this->message->id,
             'chat_id' => $this->message->chat_id,
-            'text' => $this->message->text,
+            'text' => $decryptedText,
             'user_id' => $this->message->user_id,
             'user_name' => $this->message->user->name,
+            'attachments' => $this->message->attachments,
             'created_at' => $this->message->created_at->toIso8601String(),
         ];
     }

@@ -21,7 +21,8 @@ return [
         'register',
         'login',
         'logout',
-        'broadcasting/auth'
+        'broadcasting/auth',
+        'storage/*'
     ],
 
     'allowed_methods' => ['*'],

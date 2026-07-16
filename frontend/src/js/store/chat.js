@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import {defineStore} from 'pinia';
 import axios from 'axios';
 
 export const useChatStore = defineStore('chat', {
@@ -40,12 +40,21 @@ export const useChatStore = defineStore('chat', {
         },
 
         // Отправка нового сообщения на бэкенд
-        async sendMessageAction(chatId, text) {
+        async sendMessageAction(chatId, formData) {
+
             try {
-                const response = await axios.post(`/api/chats/${chatId}/messages`, { text });
-                this.messages.push(response.data); // Сразу пушим своё сообщение в ленту
+
+                const response = await axios.post(`/api/chats/${chatId}/messages`, formData, {
+                    headers: {'Content-Type': 'multipart/form-data'}
+                });
+                // Оптимистично добавляем готовое сообщение (с текстом и файлами сразу)
+                //  if (!this.messages.some(m => m.id === response.data.id)) {
+                this.messages.push(response.data);
+                //}
+
                 return response.data;
             } catch (error) {
+                alert('Ошибка отправки сообщения');
                 console.error('Ошибка отправки сообщения:', error);
                 throw error;
             }

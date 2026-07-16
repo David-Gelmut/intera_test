@@ -19,6 +19,8 @@ Route::get('/api/email/verify/{id}/{hash}', [EmailVerificationController::class,
 
 Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function () {
 
+    Route::get('/chats/{chat}/sync', [ChatController::class, 'sync']);
+
     Route::get('/user', function (Request $request) {
         return $request->user();
     });

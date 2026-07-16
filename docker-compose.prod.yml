@@ -15,8 +15,10 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./backend/:/var/www
-      - ./backend/local-php.ini:/usr/local/etc/php/conf.d/local-php.ini
+      - ./backend/docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./backend/docker/nginx.conf:/etc/nginx/conf.d/uploads.conf
+      - ./backend/docker/php.ini:/usr/local/etc/php/conf.d/uploads.ini
+      - ./backend:/var/www
     env_file:
       - backend/.env
     depends_on:
@@ -32,7 +34,7 @@ services:
     container_name: yandex_worker
     restart: unless-stopped
     working_dir: /var/www
-    command: php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=600
+    command:  php artisan queue:work --queue=default,reverb --sleep=3 --tries=3 --timeout=600
     cap_add:
       - SYS_ADMIN
     security_opt:
@@ -45,6 +47,26 @@ services:
     depends_on:
       - mysql
       - redis
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: yandex_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"       # Порт для обмена сообщениями
+      - "15672:15672"     # Веб-панель управления (логин/пароль ниже)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - queue-worker
+      - reverb
     networks:
       - app-network
 
@@ -99,6 +121,8 @@ volumes:
   mysql_data:
     driver: local
   redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local
 
 networks:
