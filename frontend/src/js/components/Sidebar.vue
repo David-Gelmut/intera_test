@@ -29,7 +29,7 @@
     </div>
 
     <!-- Основная навигация по 5 модулям платформы -->
-    <nav class="flex-1 space-y-2 px-4 py-6 overflow-y-auto flex flex-col justify-center lg:justify-start lg:space-y-1">
+    <nav class="flex-1 space-y-1 px-4 py-4 overflow-y-auto flex flex-col justify-start">
 
       <router-link
           to="/dashboard"
