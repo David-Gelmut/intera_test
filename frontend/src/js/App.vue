@@ -29,6 +29,7 @@
 <script setup>
 import { useAuthStore } from './store/auth.js';
 const authStore = useAuthStore();
+
 </script>
 <style>
 .fade-enter-active,

@@ -37,6 +37,8 @@ const chatStore = useChatStore();
 const router = useRouter();
 
 onMounted(() => {
+
+  authStore.getUser();
   const currentUserId = authStore.user?.id;
 
   if (currentUserId && window.Echo) {

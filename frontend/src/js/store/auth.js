@@ -18,7 +18,8 @@ export const useAuthStore = defineStore('auth', {
         },
         async getUser(){
             const userResponse = await axios.get('/api/user');
-            authStore.user = userResponse.data;
+            this.user = userResponse.data;
+            localStorage.removeItem('user');
             localStorage.setItem('user', JSON.stringify(userResponse.data));
         },
         async login(credentials) {

@@ -20,7 +20,7 @@ class ChatController extends Controller
             ->with([
                 'users' => function ($query) use ($userId) {
                 $query
-                    ->select('users.id', 'users.name', 'users.email', 'users.role')
+                    ->select('users.id', 'users.name', 'users.email', 'users.role','users.avatar_path')
                     ->where('users.id', '!=', $userId);
             },
                 // Подгружаем только одно самое последнее сообщение вместе с файлами
@@ -113,7 +113,7 @@ class ChatController extends Controller
         $currentUserId = $request->user()->id;
 
         // Выбираем всех активных пользователей, кроме текущего залогиненного
-        $users = \App\Models\User::select('id', 'name', 'email', 'role')
+        $users = \App\Models\User::query()->select('id', 'name', 'email', 'role', 'avatar_path')
             ->where('id', '!=', $currentUserId)
             ->where('status', 'active')
             ->get();
