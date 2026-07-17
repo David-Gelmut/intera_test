@@ -118,7 +118,7 @@
           </div>
           <div class="flex justify-between text-xs">
             <span class="text-slate-400 font-medium">Роль системы</span>
-            <span class="text-slate-700 font-semibold">Администратор</span>
+            <span class="text-slate-700 font-semibold">{{ authStore.user?.role }}</span>
           </div>
         </div>
 
