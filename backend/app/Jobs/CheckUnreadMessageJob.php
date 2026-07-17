@@ -24,22 +24,30 @@ class CheckUnreadMessageJob implements ShouldQueue
      */
     public function handle(): void
     {
-        //$currentMessage = Message::with('chat.users')->find($this->message->id);
-        $currentMessage = Message::query()->find($this->message->id);
-        $currentMessage->load('chat.users');
+        $triggerMessage = Message::query()->find($this->message->id);
+        if (!$triggerMessage || $triggerMessage->read_at) {
+            return; // Если стартовое сообщение уже прочитали — тушим задачу
+        }
+        $triggerMessage->load('chat.users');
 
-        if (!$currentMessage || $currentMessage->is_read) {
+        $unreadMessages = Message::where('chat_id', $triggerMessage->chat_id)
+            ->where('user_id', $triggerMessage->user_id)
+            ->where('read_at', null)
+            ->with('attachments', 'user')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        if ($unreadMessages->isEmpty()) {
             return;
         }
 
-        // Находим получателя (того, кто НЕ является автором сообщения)
-        $recipient = $currentMessage->chat->users
-            ->where('id', '!=', $currentMessage->user_id)
+        $recipient = $triggerMessage->chat->users
+            ->where('id', '!=', $triggerMessage->user_id)
             ->first();
 
         if ($recipient && $recipient->email) {
-            // Вызываем системное уведомление Laravel
-            $recipient->notify(new NewMessageNotification($currentMessage));
+            $recipient->notify(new NewMessageNotification($unreadMessages));
         }
+
     }
 }
