@@ -15,20 +15,43 @@ class ChatController extends Controller
 {
     public function getChats(Request $request): JsonResponse
     {
-        $myId = $request->user()->id;
+        $userId = $request->user()->id;
         $chats = $request->user()->chats()
-            ->with(['users' => function ($query) use ($myId) {
+            ->with([
+                'users' => function ($query) use ($userId) {
                 $query
                     ->select('users.id', 'users.name', 'users.email', 'users.role')
-                    ->where('users.id', '!=', $myId);
-            }])
+                    ->where('users.id', '!=', $userId);
+            },
+                // Подгружаем только одно самое последнее сообщение вместе с файлами
+                'messages' => function ($query) {
+                    $query->latest()->with('attachments')->limit(1);
+                }
+            ])
             ->get()
-            ->map(function ($chat) use ($myId) {
+            ->map(function ($chat) use ($userId) {
+
+                $lastMessage = $chat->messages->first();
+
+                if ($lastMessage && $lastMessage->text) {
+                    try {
+                        $lastMessage->text = Crypt::decryptString($lastMessage->text);
+                    } catch (\Exception $e) {
+                        // Если сообщение старое или не зашифровано, оставляем как есть
+                    }
+                }
+
+                $chat->last_message = $lastMessage;
+
                 // Считаем сообщения, отправленные НЕ мной, у которых read_at равен null
-                $chat->unread_count = \App\Models\Message::where('chat_id', $chat->id)
-                    ->where('user_id', '!=', $myId)
+                $chat->unread_count = $chat
+                    ->messages()
+                    ->where('user_id', '!=', $userId)
                     ->whereNull('read_at')
                     ->count();
+
+                //$chat->setRelation('users', $chat->users->first());
+
                 return $chat;
             });
 
@@ -45,7 +68,7 @@ class ChatController extends Controller
         ]);
 
         $myId = $request->user()->id;
-        $recipientId = (int) $request->user_id;
+        $recipientId = (int)$request->user_id;
 
         // Защита: нельзя создать чат с самим собой
         if ($myId === $recipientId) {

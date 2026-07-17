@@ -25,40 +25,9 @@
         :class="chatStore.activeChatId ? 'hidden md:flex' : 'flex'">
       <!-- Вкладки управления -->
       <div class="p-4 border-b border-slate-200 bg-white space-y-3">
-<!--        <h2 class="text-lg font-bold text-slate-900">Мессенджер</h2>-->
-
-<!--        <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-md shrink-0">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
-          </div>
-
-          <div class="flex flex-col min-w-0">
-            <h2 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">City Of Masters</h2>
-            <span class="text-[10px] text-indigo-600 font-bold tracking-wider uppercase mt-1">Professional Network</span>
-          </div>
-        </div>-->
-
-<!--        <div class="flex items-center gap-2.5">
-          &lt;!&ndash; Иконка "City Of Masters" &ndash;&gt;
-          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-2xs shrink-0">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z" />
-              <path d="M15 9h-2v2h2V9zm-4 0H9v2h2V9z" />
-              <path d="M9 14h6" />
-            </svg>
-          </div>
-
-          <div class="flex flex-col min-w-0">
-            <h2 class="text-sm font-bold text-slate-900 tracking-tight leading-none uppercase">City Of Masters</h2>
-            <span class="text-[10px] text-slate-400 font-medium mt-1">Платформа гильдии мастеров</span>
-          </div>
-        </div>-->
-
 
         <!-- Кнопки переключения режимов -->
-        <div class="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/50">
+        <div class="flex md:mt-0 mt-16 rounded-lg bg-slate-100 p-0.5 border border-slate-200/50">
           <button
               @click="activeTab = 'chats'"
               class="flex-1 text-xs py-1.5 font-medium rounded-md transition-all cursor-pointer"
@@ -98,6 +67,7 @@
 
           <!-- Имя собеседника и превью сообщения -->
           <div class="flex-1 min-w-0">
+
             <div class="flex items-center justify-between">
               <span class="font-semibold text-sm text-slate-800 truncate">
                 {{ chat.users[0] ? chat.users[0].name : 'Собеседник' }}
@@ -108,7 +78,33 @@
                 {{ chat.unread_count }}
               </span>
             </div>
-            <p class="text-xs text-slate-500 truncate mt-0.5">Нажмите, чтобы открыть переписку...</p>
+
+            <!-- Динамическое превью последнего сообщения (Как в Telegram) -->
+            <p class="text-xs truncate mt-0.5" :class="chat.unread_count > 0 ? 'text-slate-900 font-semibold' : 'text-slate-500'">
+              <template v-if="chat.last_message">
+
+                <!-- Если в сообщении есть прикрепленные файлы -->
+                <template v-if="chat.last_message.attachments && chat.last_message.attachments.length > 0">
+                  <span class="text-blue-600 font-medium">
+                    <template v-if="chat.last_message.attachments[0].file_type === 'image'">📷 Фотография</template>
+                    <template v-if="chat.last_message.attachments[0].file_type === 'video'">🎥 Видеоролик</template>
+                    <template v-if="chat.last_message.attachments[0].file_type === 'file'">📎 Файл: {{ chat.last_message.attachments[0].file_name }}</template>
+                  </span>
+                  <span v-if="chat.last_message.text" class="text-slate-400 ml-1">— {{ chat.last_message.text }}</span>
+                </template>
+
+                <!-- Если отправлен только чистый текст -->
+                <template v-else>
+                  {{ chat.last_message.text }}
+                </template>
+
+              </template>
+              <template v-else>
+                <span class="text-slate-400 italic">Нет сообщений...</span>
+              </template>
+            </p>
+
+<!--            <p class="text-xs text-slate-500 truncate mt-0.5">Нажмите, чтобы открыть переписку...</p>-->
           </div>
 
         </button>
@@ -147,7 +143,7 @@
       <template v-if="chatStore.activeChatId">
 
         <!-- Шапка чата -->
-        <div class="h-14 border-b border-slate-200 bg-white px-6 flex items-center justify-between shadow-2xs">
+        <div class=" h-14 border-b border-slate-200 bg-white px-6 flex items-center justify-between shadow-2xs">
 
           <button @click="chatStore.activeChatId = null"
                   class="md:hidden mr-2 p-1 text-slate-500 hover:text-slate-700 cursor-pointer">
@@ -190,95 +186,84 @@
         </div>
 
         <!-- Лента сообщений -->
-        <div ref="messageContainer" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-4">
+        <div ref="messageContainer" class="flex-1 flex flex-col justify-end p-4 md:p-6 overflow-y-auto space-y-4">
+
+          <div class="flex-1"></div>
+
           <div
               v-for="msg in chatStore.messages"
               :key="msg.id"
-              class="flex flex-col max-w-[85%] md:max-w-[70%]"
-              :class="isMyMessage(msg.user_id) ? 'ml-auto items-end' : 'items-start'"
+              class="flex flex-col max-w-[85%] md:max-w-[70%] group"
+              :class="[
+                isMyMessage(msg.user_id) ? 'ml-auto items-end' : 'items-start',
+                index === 0 ? 'mt-auto' : ''
+              ]"
           >
-            <!-- Имя отправителя (только для чужих сообщений) -->
+            <!-- Имя отправителя (для чужих) -->
             <span v-if="!isMyMessage(msg.user_id)" class="text-xs text-slate-400 font-medium ml-2 mb-1">
-            {{ msg.user?.name }}
-          </span>
+              {{ msg.user?.name }}
+            </span>
 
-            <!-- Облачко со смешанным контентом (Текст + Файлы) -->
-            <div
-                class="px-4 py-2.5 rounded-2xl text-sm shadow-2xs leading-relaxed break-words"
-                :class="isMyMessage(msg.user_id)? 'bg-indigo-600 text-white rounded-br-none': 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'"
-            >
-              <!-- Вывод текста сообщения (если он есть) -->
-              <span v-if="msg.text" class="block mb-1 whitespace-pre-wrap">{{ msg.text }}</span>
+            <!-- Контейнер: Облачко + Кнопки действий (карандаш/корзина) -->
+            <div class="flex items-center gap-2 max-w-full" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
 
-              <!-- Вывод прикрепленных файлов (если они есть в attachments) -->
-              <div v-if="msg.attachments && msg.attachments.length > 0" v-viewer class="space-y-2 mt-2">
-                <div v-for="file in msg.attachments" :key="file.id">
+              <!-- Облачко сообщения -->
+              <div
+                  class="px-4 py-2 text-sm shadow-2xs leading-relaxed break-words w-fit max-w-full relative"
+                  :class="isMyMessage(msg.user_id)
+                  ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-14 pb-5'
+                  : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-12 pb-5'"
+              >
+                <!-- Вывод текста -->
+                <span v-if="msg.text" class="block whitespace-pre-wrap">{{ msg.text }}</span>
 
-                  <!-- Если файл — КАРТИНКА -->
-                  <div v-if="file.file_type === 'image'" class="max-w-xs">
-                    <!-- УБРАЛИ @click, плагин сам обработает нажатие -->
-                    <img
-                        :src="getFileUrl(file.file_path)"
-                        alt="Изображение"
-                        class="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity border border-slate-100/50"
-                    />
-                  </div>
-
-                  <!-- Если файл — ВИДЕО -->
-                  <div v-else-if="file.file_type === 'video'" class="max-w-xs sm:max-w-sm my-1 relative group">
-                    <video
-                        :src="getFileUrl(file.file_path)"
-                        controls
-                        playsinline
-                        preload="metadata"
-                        class="rounded-xl max-h-64 w-full object-contain bg-black border border-slate-100/10 shadow-sm"
-                    >
-                      Ваш браузер не поддерживает воспроизведение видео.
-                    </video>
-
-                    <!-- Кнопка развертывания, которая появляется при наведении на видео -->
-                    <button
-                        type="button"
-                        @click="openVideoModal(getFileUrl(file.file_path))"
-                        class="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/80"
-                        title="Развернуть на весь экран"
-                    >
-                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0l-6-6" />
-                      </svg>
-                    </button>
-
-                  </div>
-
-
-                  <!-- Если файл — ДОКУМЕНТ -->
-                  <div v-else class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-black/5 max-w-xs">
-                    <svg class="h-7 w-7 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <div class="flex flex-col min-w-0 flex-1">
-                      <span class="font-medium text-xs truncate" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-slate-800'">
-                        {{ file.file_name }}
-                      </span>
-                      <a
-                          target="_blank"
-                          download="true"
-                          :href="getFileUrl(file.file_path)"
-                          class="text-[10px] underline font-semibold mt-0.5 text-left cursor-pointer transition-colors"
-                          :class="isMyMessage(msg.user_id) ? 'text-indigo-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-800'"
-                      >
-                        Скачать
-                      </a>
-                    </div>
-                  </div>
-
+                <!-- Вывод вложений (attachments) -->
+                <div v-if="msg.attachments && msg.attachments.length > 0" class="space-y-2 mt-2">
+                  <!-- ... ваш старый v-for="file in msg.attachments" для картинок/видео/файлов ... -->
                 </div>
+
+                <!-- СЛУЖЕБНЫЙ БЛОК: Время, Изменено, Галочки (Позиционируется абсолютно внизу справа облачка) -->
+                <div class="absolute bottom-1 right-2.5 flex items-center gap-1 text-[10px]" :class="isMyMessage(msg.user_id) ? 'text-indigo-200' : 'text-slate-400'">
+
+                  <!-- Метка "изм." -->
+                  <span v-if="isEdited(msg)" class="font-medium italic opacity-80">изм.</span>
+
+                  <!-- Время отправки -->
+                  <span>{{ formatTime(msg.created_at) }}</span>
+
+                  <!-- ГАЛОЧКИ ДОСТАВКИ (Только для наших сообщений) -->
+                  <div v-if="isMyMessage(msg.user_id)" class="ml-0.5 shrink-0">
+                    <!-- Две галочки (Прочитано) -->
+                    <svg v-if="msg.read_at" class="h-3.5 w-3.5 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7M5 18l4 4L19 12" />
+                    </svg>
+                    <!-- Одна галочка (Доставлено) -->
+                    <svg v-else class="h-3.5 w-3.5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- КНОПКИ ДЕЙСТВИЙ: Появляются только при наведении мышки (group-hover) и только для НАШИХ сообщений -->
+              <div v-if="isMyMessage(msg.user_id)" class="flex items-center bg-white border border-slate-100 rounded-lg shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity">
+                <!-- Редактировать -->
+                <button @click="startEdit(msg)" type="button" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-l-lg hover:bg-slate-50 cursor-pointer" title="Редактировать">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                </button>
+                <!-- Удалить -->
+                <button @click="deleteMessage(msg.id)" type="button" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-r-lg hover:bg-rose-50 border-l border-slate-100 cursor-pointer" title="Удалить для всех">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
               </div>
 
             </div>
-
           </div>
         </div>
+
+
+        <!-- Лента сообщений -->
 
         <!-- Подвал чата: Ввод текста и прикрепление файлов -->
         <div class="p-4 border-t border-slate-200 bg-white shadow-2xs relative">
@@ -327,6 +312,18 @@
               </div>
             </div>
 
+
+            <!-- Индикатор режима редактирования -->
+            <div v-if="editingMessageId" class="flex items-center justify-between px-3 py-1.5 bg-blue-50/70 border-l-4 border-blue-600 text-xs text-blue-800 rounded-r-xl mb-1">
+              <div class="flex items-center gap-1.5 truncate">
+                <svg class="h-3.5 w-3.5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                <span class="font-medium truncate">Редактирование сообщения...</span>
+              </div>
+              <button @click="cancelEdit" type="button" class="text-blue-500 hover:text-blue-700 font-semibold uppercase text-[10px] tracking-wider cursor-pointer">
+                Отмена
+              </button>
+            </div>
+
             <!-- Основная строка управления (Кнопки и Инпут) -->
             <div class="flex items-center gap-2 md:gap-3">
 
@@ -353,6 +350,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
+
+
 
               <!-- Поле ввода текста -->
               <input
@@ -448,10 +447,118 @@ const fileInput = ref(null);
 const selectedFiles = ref([]);
 const isVideoModalOpen = ref(false);
 const currentModalVideoUrl = ref('');
+const editingMessageId = ref(null);
 let currentUserId = authStore.user?.id || null;
 
 const isMyMessage = (id) => id === currentUserId;
 const BACKEND_URL = axios.defaults.baseURL;
+
+// Выбор и открытие чата
+const selectChat = async (id, user = null) => {
+
+  if (chatStore.activeChatId) {
+    window.Echo.leaveChannel(`chat.${chatStore.activeChatId}`);
+  }
+
+  chatStore.activeChatId = id;
+  chatStore.activeInterlocutor = user;
+
+  await chatStore.loadMessages(id);
+  await chatStore.readChatMessages(id);
+  scrollToBottom();
+
+  window.Echo.private(`chat.${id}`)
+      // 1. Слушаем отправку НОВЫХ сообщений
+      .listen('MessageSent', (e) => {
+        // Обновляем превью последнего сообщения в списке чатов слева
+        const targetChat = chatStore.chatList.find(c => c.id === id);
+        if (targetChat) {
+          targetChat.last_message = e;
+        }
+
+        // Если этот чат сейчас открыт на экране — пушим в ленту
+        if (chatStore.activeChatId === id) {
+          if (!chatStore.messages.some(m => m.id === e.id)) {
+            chatStore.messages.push(e);
+          }
+          scrollToBottom();
+          chatStore.readChatMessages(id); // Шлем бэку статус "прочитано"
+        } else {
+          // Если чат в фоне — увеличиваем зеленый кружок счетчика
+          if (targetChat) {
+            targetChat.unread_count = (targetChat.unread_count || 0) + 1;
+          }
+        }
+      })
+
+      // 2. Слушаем РЕДАКТИРОВАНИЕ сообщений (Собеседник изменил текст)
+      .listen('MessageUpdated', (e) => {
+        // Находим измененное сообщение в нашей ленте и обновляем его контент
+        const idx = chatStore.messages.findIndex(m => m.id === e.message.id);
+        if (idx !== -1) {
+          chatStore.messages[idx] = e.message;
+        }
+
+        // Также обновляем превью в левой панели, если это было самое последнее сообщение
+        const targetChat = chatStore.chatList.find(c => c.id === id);
+        if (targetChat && targetChat.last_message?.id === e.message.id) {
+          targetChat.last_message = e.message;
+        }
+      })
+
+      // 3. Слушаем УДАЛЕНИЕ сообщений (Собеседник удалил у себя для всех)
+      .listen('MessageDeleted', (e) => {
+        // Мгновенно стираем удаленное облачко с экрана
+        chatStore.messages = chatStore.messages.filter(m => m.id !== e.messageId);
+
+        // Если удалили последнее сообщение — запрашиваем список чатов заново для обновления превью
+        const targetChat = chatStore.chatList.find(c => c.id === id);
+        if (targetChat && targetChat.last_message?.id === e.messageId) {
+          // Чтобы не писать сложную логику поиска предыдущего сообщения, просто обновляем список
+          chatStore.getChatList();
+        }
+      });
+
+/*  window.Echo.private(`chat.${id}`)
+      .listen('MessageSent', (e) => {
+
+        if (!chatStore.messages.some(m => m.id === e.id)) {
+           chatStore.messages.push(e.message);
+         }
+        chatStore.messages.push(e);
+        scrollToBottom();
+        chatStore.readChatMessages(id);
+      });*/
+};
+
+
+// Проверка, редактировалось ли сообщение
+function isEdited(msg) {
+  return msg.created_at !== msg.updated_at;
+}
+
+// Функция форматирования времени (из ISO в ЧЧ:ММ)
+function formatTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+
+
+
+
+// Начало редактирования: переносим текст в инпут
+function startEdit(msg) {
+  editingMessageId.value = msg.id;
+  newMessageText.value = msg.text; // Подставляем текст в инпут
+}
+
+// Отмена редактирования
+function cancelEdit() {
+  editingMessageId.value = null;
+  newMessageText.value = '';
+}
 
 // Функция для открытия видео на весь экран
 function openVideoModal(url) {
@@ -505,36 +612,42 @@ const createOrGetChat = async (targetUser) => {
   }
 };
 
-// Выбор и открытие чата
-const selectChat = async (id, user = null) => {
 
-  if (chatStore.activeChatId) {
-    window.Echo.leaveChannel(`chat.${chatStore.activeChatId}`);
+// ФУНКЦИЯ УДАЛЕНИЯ СООБЩЕНИЯ
+async function deleteMessage(messageId) {
+  if (!confirm('Удалить это сообщение для всех?')) return;
+
+  try {
+    await axios.delete(`/api/messages/${messageId}`);
+    // Удаляем локально с экрана
+    chatStore.messages = chatStore.messages.filter(m => m.id !== messageId);
+  } catch (error) {
+    console.error('Не удалось удалить сообщение:', error);
   }
-
-  chatStore.activeChatId = id;
-  chatStore.activeInterlocutor = user;
-
-  await chatStore.loadMessages(id);
-  await chatStore.readChatMessages(id);
-  scrollToBottom();
-
-  window.Echo.private(`chat.${id}`)
-      .listen('MessageSent', (e) => {
-
-        /* if (!chatStore.messages.some(m => m.id === e.id)) {
-           chatStore.messages.push(e.message);
-         }*/
-        chatStore.messages.push(e);
-        scrollToBottom();
-        chatStore.readChatMessages(id);
-      });
-};
+}
 
 // Отправка сообщения
 const sendMessage = async () => {
 
   if (!newMessageText.value.trim() && selectedFiles.value.length === 0) return;
+
+  // ЕСЛИ МЫ РЕДАКТИРУЕМ СУЩЕСТВУЮЩЕЕ СООБЩЕНИЕ:
+  if (editingMessageId.value) {
+    try {
+      const response = await axios.put(`/api/messages/${editingMessageId.value}`, {
+        text: newMessageText.value
+      });
+
+      // Обновляем сообщение локально на экране
+      const idx = chatStore.messages.findIndex(m => m.id === editingMessageId.value);
+      if (idx !== -1) chatStore.messages[idx] = response.data;
+
+      cancelEdit(); // Сбрасываем режим редактирования
+    } catch (error) {
+      console.error('Не удалось отредактировать:', error);
+    }
+    return;
+  }
 
   const formData = new FormData();
   formData.append('chat_id', chatStore.activeChatId);

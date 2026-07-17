@@ -45,6 +45,8 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
     Route::get('/chats/{id}/messages', [MessageController::class, 'getMessages']);
     Route::post('/chats/{id}/messages', [MessageController::class, 'sendMessage']);
 
+    Route::put('/messages/{message}', [MessageController::class, 'update']);
+    Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
 });
 
 //Route::middleware('auth:sanctum')->group(function () {

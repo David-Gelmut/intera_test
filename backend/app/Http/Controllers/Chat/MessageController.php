@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Chat;
 
+use App\Events\MessageDeleted;
 use App\Events\MessageSent;
+use App\Events\MessageUpdated;
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckUnreadMessageJob;
 use App\Models\Message;
@@ -125,6 +127,58 @@ class MessageController extends Controller
             ->where('user_id', '!=', $request->user()->id)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
+    }
+
+    // 1. РЕДАКТИРОВАНИЕ СООБЩЕНИЯ
+    public function update(Request $request, Message $message): JsonResponse
+    {
+        // Защита: редактировать можно только свои сообщения
+        if ($message->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        $request->validate([
+            'text' => 'required|string',
+        ]);
+
+        // Шифруем новый текст
+        $message->update([
+            'text' => Crypt::encryptString($request->text)
+        ]);
+
+        // Для сокета возвращаем ЧИСТЫЙ расшифрованный текст
+        $message->text = $request->text;
+        $message->load('attachments', 'user');
+
+        // Пушим в сокеты событие обновления, чтобы у собеседника текст тоже изменился
+        broadcast(new MessageUpdated($message))->toOthers();
+
+        return response()->json($message);
+    }
+
+    // 2. УДАЛЕНИЕ СООБЩЕНИЯ ДЛЯ ВСЕХ
+    public function destroy(Message $message): JsonResponse
+    {
+        if ($message->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        $chatId = $message->chat_id;
+        $messageId = $message->id;
+
+        // Удаляем прикрепленные файлы из MinIO/Public
+        foreach ($message->attachments as $file) {
+            Storage::disk('public')
+                ->delete(str_replace( config('app.url') . '/storage/', '', $file->file_path));
+        }
+
+        // Удаляем из базы
+        $message->delete();
+
+        // Шлем сигнал сокетам: "Удали сообщение с ID таким-то"
+        broadcast(new MessageDeleted($chatId, $messageId))->toOthers();
 
         return response()->json(['success' => true]);
     }
