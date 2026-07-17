@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chat\MessageController;
 use App\Http\Controllers\Converter\ConvertController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Parser\CompanyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
@@ -33,20 +34,20 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
         Route::put('/users/{id}', [UserController::class, 'update']);
     });
 
-    // [ДОБАВЛЕНО] Управление чатом (Очистка и Удаление)
     Route::post('/chats/{id}/clear', [ChatController::class, 'clearMessages']);
     Route::delete('/chats/{id}', [ChatController::class, 'destroy']);
     Route::get('/chats', [ChatController::class, 'getChats']);
     Route::post('/chats', [ChatController::class, 'store']);
     Route::get('/chats/users', [ChatController::class, 'getUsers']);
 
-    // [ДОБАВЛЕНО] Пометка сообщений прочитанными
     Route::post('/chats/{id}/read', [MessageController::class, 'markAsRead']);
     Route::get('/chats/{id}/messages', [MessageController::class, 'getMessages']);
     Route::post('/chats/{id}/messages', [MessageController::class, 'sendMessage']);
-
     Route::put('/messages/{message}', [MessageController::class, 'update']);
     Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
+
+    Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics']);
+
 });
 
 //Route::middleware('auth:sanctum')->group(function () {
