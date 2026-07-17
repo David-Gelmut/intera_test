@@ -14,6 +14,10 @@ import BannedPage from "../views/BannedPage.vue";
 import MainLayout from "../views/Layouts/MainLayout.vue";
 import Users from "../views/Admin/Users.vue";
 import Chat from "../views/Chat.vue";
+import Feed from "../views/Feed.vue";
+import Blog from "../views/Blog.vue";
+import Jobs from "../views/Jobs.vue";
+import Forum from "../views/Forum.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -58,6 +62,30 @@ const router = createRouter({
                     path: 'chat',
                     name: 'Chat',
                     component: Chat,
+                    meta: { auth: true, verified: true}
+                },
+                {
+                    path: 'feed',
+                    name: 'Feed',
+                    component: Feed,
+                    meta: { auth: true, verified: true}
+                },
+                {
+                    path: 'blogs',
+                    name: 'Blog',
+                    component: Blog,
+                    meta: { auth: true, verified: true}
+                },
+                {
+                    path: 'jobs',
+                    name: 'Jobs',
+                    component: Jobs,
+                    meta: { auth: true, verified: true}
+                },
+                {
+                    path: 'forum',
+                    name: 'Forum',
+                    component: Forum,
                     meta: { auth: true, verified: true}
                 }
             ]
