@@ -30,8 +30,10 @@ class CheckUnreadMessageJob implements ShouldQueue
         }
         $triggerMessage->load('chat.users');
 
-        $unreadMessages = Message::where('chat_id', $triggerMessage->chat_id)
+        $unreadMessages = Message::query()
+            ->where('chat_id', $triggerMessage->chat_id)
             ->where('user_id', $triggerMessage->user_id)
+            ->where('is_notified', false)
             ->where('read_at', null)
             ->with('attachments', 'user')
             ->orderBy('id', 'asc')
@@ -46,6 +48,13 @@ class CheckUnreadMessageJob implements ShouldQueue
             ->first();
 
         if ($recipient && $recipient->email) {
+
+            // маркируем всю эту пачку сообщений в БД как "уведомленные"
+            // Делаем это ДО отправки письма, чтобы параллельные джобы сразу увидели изменения
+            Message::query()
+                ->whereIn('id', $unreadMessages->pluck('id'))
+                ->update(['is_notified' => true]);
+
             $recipient->notify(new NewMessageNotification($unreadMessages));
         }
 

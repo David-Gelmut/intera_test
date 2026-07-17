@@ -4,13 +4,18 @@
 
       <!-- Логотип и приветствие над карточкой -->
       <div class="text-center">
-        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm mb-4">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+
+        <div class="flex flex-row items-center justify-center gap-4">
+
+          <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+
+          <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">City Of Masters</h2>
         </div>
-        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Intera Maps</h2>
+
         <p class="mt-2 text-sm text-slate-500">Создайте аккаунт для начала работы с платформой</p>
       </div>
 

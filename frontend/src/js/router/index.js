@@ -25,13 +25,13 @@ const router = createRouter({
             meta: {auth: true, hidden: true,},
             children: [
                 {
-                    path: '/settings',
+                    path: '/tools/settings',
                     name: 'Maps',
                     component: Settings,
                     meta: {auth: true, verified: true, allowedRoles: ['user', 'admin']}
                 },
                 {
-                    path: '/convert',
+                    path: '/tools/convert',
                     name: 'Converter',
                     component: Convert,
                     meta: {auth: true, verified: true, allowedRoles: ['user', 'admin']}
@@ -49,7 +49,7 @@ const router = createRouter({
                     meta: {auth: true, verified: true, allowedRoles: ['user', 'admin']}
                 },
                 {
-                    path: '/users',
+                    path: '/admin/users',
                     name: 'Users',
                     component: Users,
                     meta: {auth: true, verified: true, allowedRoles: ['admin']}

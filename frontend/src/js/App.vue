@@ -16,9 +16,10 @@
       <!-- Контент страницы -->
       <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
         <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
+          <component :is="Component" transition/>
+<!--          <transition name="fade" mode="out-in">
             <component :is="Component" transition/>
-          </transition>
+          </transition>-->
         </router-view>
       </main>
     </div>

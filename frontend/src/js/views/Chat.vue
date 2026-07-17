@@ -8,7 +8,37 @@
         :class="chatStore.activeChatId ? 'hidden md:flex' : 'flex'">
       <!-- Вкладки управления -->
       <div class="p-4 border-b border-slate-200 bg-white space-y-3">
-        <h2 class="text-lg font-bold text-slate-900">Мессенджер</h2>
+<!--        <h2 class="text-lg font-bold text-slate-900">Мессенджер</h2>-->
+
+<!--        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-md shrink-0">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+
+          <div class="flex flex-col min-w-0">
+            <h2 class="text-base font-black text-slate-900 tracking-tight leading-none uppercase">City Of Masters</h2>
+            <span class="text-[10px] text-indigo-600 font-bold tracking-wider uppercase mt-1">Professional Network</span>
+          </div>
+        </div>-->
+
+<!--        <div class="flex items-center gap-2.5">
+          &lt;!&ndash; Иконка "City Of Masters" &ndash;&gt;
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-2xs shrink-0">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z" />
+              <path d="M15 9h-2v2h2V9zm-4 0H9v2h2V9z" />
+              <path d="M9 14h6" />
+            </svg>
+          </div>
+
+          <div class="flex flex-col min-w-0">
+            <h2 class="text-sm font-bold text-slate-900 tracking-tight leading-none uppercase">City Of Masters</h2>
+            <span class="text-[10px] text-slate-400 font-medium mt-1">Платформа гильдии мастеров</span>
+          </div>
+        </div>-->
+
 
         <!-- Кнопки переключения режимов -->
         <div class="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/50">
