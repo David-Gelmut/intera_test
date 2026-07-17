@@ -7,6 +7,7 @@ use App\Http\Controllers\Chat\MessageController;
 use App\Http\Controllers\Converter\ConvertController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Parser\CompanyController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,8 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
     Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
 
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics']);
+
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
 
 });
 

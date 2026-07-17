@@ -51,7 +51,7 @@
           У вас пока нет активных диалогов. Перейдите во вкладку "Контакты", чтобы начать общение.
         </div>
 
-        <button
+        <div
             v-for="chat in chatStore.chatList"
             :key="chat.id"
             @click="selectChat(chat.id, chat.users[0])"
@@ -60,9 +60,20 @@
         >
 
           <!-- Круглая иконка пользователя (Аватарка с инициалом) -->
-          <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-sm text-indigo-700 uppercase tracking-wider group-hover:bg-indigo-200 transition-colors">
-            {{ chat.users[0] ? chat.users[0].name.charAt(0) : 'U' }}
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-sm text-indigo-700 uppercase tracking-wider group-hover:bg-indigo-200 transition-colors overflow-hidden border border-indigo-200/50">
+
+            <!-- Добавили класс rounded-full на саму картинку -->
+            <img
+                v-if="chat.users[0]?.avatar_path"
+                :src="chat.users[0].avatar_path"
+                alt="Аватар"
+                class="h-full w-full object-cover rounded-full"
+            />
+
+            <template v-else>
+              {{ chat.users[0].name ? chat.users[0].name.charAt(0) : 'U' }}
+            </template>
+
           </div>
 
           <!-- Имя собеседника и превью сообщения -->
@@ -107,7 +118,8 @@
 <!--            <p class="text-xs text-slate-500 truncate mt-0.5">Нажмите, чтобы открыть переписку...</p>-->
           </div>
 
-        </button>
+        </div>
+
       </div>
 
       <!-- СПИСОК 2: Все пользователи системы (Контакты) -->
@@ -121,10 +133,27 @@
             @click="createOrGetChat(user)"
             class="w-full text-left p-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer"
         >
-          <div class="flex flex-col min-w-0">
-            <span class="font-semibold text-sm text-slate-800 truncate">{{ user.name }}</span>
-            <span class="text-xs text-slate-400 truncate">{{ user.email }}</span>
+
+
+          <div class="flex flex-row gap-2 min-w-0">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-sm text-indigo-700 uppercase tracking-wider group-hover:bg-indigo-200 transition-colors overflow-hidden border border-indigo-200/50">
+              <!-- Добавили класс rounded-full на саму картинку -->
+              <img
+                  v-if="user.avatar_path"
+                  :src="user.avatar_path"
+                  alt="Аватар"
+                  class="h-full w-full object-cover rounded-full"
+              />
+              <template v-else>
+                {{ authStore.user?.name ? authStore.user.name.charAt(0) : 'U' }}
+              </template>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-semibold text-sm text-slate-800 truncate">{{ user.name }}</span>
+              <span class="text-xs text-slate-400 truncate">{{ user.email }}</span>
+            </div>
           </div>
+
           <!-- Метка роли -->
           <span
               class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-sm bg-slate-100 text-slate-500">
@@ -153,14 +182,27 @@
           </button>
 
           <div class="flex items-center gap-3">
-            <div
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 font-semibold text-xs text-slate-600 uppercase">
-              {{ chatStore.activeInterlocutor ? chatStore.activeInterlocutor.name.charAt(0) : 'U' }}
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 font-semibold text-xs text-slate-600 uppercase">
+              <div
+                  @click="isAvatarModalOpen = true"
+                  class="flex h-full w-full items-center justify-center rounded-full bg-indigo-100 font-semibold text-xl text-indigo-700 uppercase tracking-wider overflow-hidden border border-indigo-200/50 shadow-2xs cursor-pointer"
+                  title="Просмотреть фото"
+              >
+                <img
+                    v-if="chatStore.activeInterlocutor?.avatar_path"
+                    :src="chatStore.activeInterlocutor.avatar_path"
+                    alt="Аватар"
+                    class="h-full w-full object-cover rounded-full transition-transform duration-200 group-hover:scale-105"
+                />
+                <template v-else>
+                  {{chatStore.activeInterlocutor?.name ? chatStore.activeInterlocutor.name.charAt(0) : 'U' }}
+                </template>
+              </div>
             </div>
             <div class="flex flex-col">
-              <span class="font-bold text-sm text-slate-800">{{
-                  chatStore.activeInterlocutor ? chatStore.activeInterlocutor.name : 'Чат'
-                }}</span>
+              <span class="font-bold text-sm text-slate-800">
+                {{chatStore.activeInterlocutor ? chatStore.activeInterlocutor.name : 'Чат'}}
+              </span>
               <!--              <span class="text-[11px] text-emerald-600 font-medium">Онлайн-трансляция сообщений</span>-->
             </div>
           </div>
@@ -426,6 +468,33 @@
     </div>
   </div>
 
+  <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА АВАТАРА НА ВЕСЬ ЭКРАН -->
+  <div
+      v-if="isAvatarModalOpen && chatStore.activeInterlocutor?.avatar_path"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-xs p-4"
+      @click="isAvatarModalOpen = false"
+  >
+    <!-- Крестик для закрытия -->
+    <button
+        type="button"
+        @click="isAvatarModalOpen = false"
+        class="absolute top-4 right-4 p-2 text-white/70 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+    >
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Крупное изображение (Ограничено по высоте экрана, чтобы не ломать верстку) -->
+    <div class="max-w-md w-full max-h-[80vh] p-2 bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <img
+          :src="chatStore.activeInterlocutor.avatar_path"
+          alt="Большой аватар"
+          class="w-full h-auto max-h-[75vh] object-cover rounded-2xl shadow-inner"
+      />
+    </div>
+  </div>
+
 
 
 </template>
@@ -449,6 +518,7 @@ const isVideoModalOpen = ref(false);
 const currentModalVideoUrl = ref('');
 const editingMessageId = ref(null);
 let currentUserId = authStore.user?.id || null;
+const isAvatarModalOpen = ref(false);
 
 const isMyMessage = (id) => id === currentUserId;
 const BACKEND_URL = axios.defaults.baseURL;
@@ -543,10 +613,6 @@ function formatTime(isoString) {
   const date = new Date(isoString);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-
-
-
-
 
 // Начало редактирования: переносим текст в инпут
 function startEdit(msg) {

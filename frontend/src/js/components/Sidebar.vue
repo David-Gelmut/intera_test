@@ -200,9 +200,22 @@
           class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group"
           active-class="!bg-slate-50"
       >
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-sm text-blue-700 uppercase tracking-wider group-hover:bg-blue-200 transition-colors">
-          {{ userInitials }}
+
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 border border-blue-200 overflow-hidden font-semibold text-sm text-blue-700 uppercase tracking-wider group-hover:bg-blue-200 transition-colors">
+          <img
+              v-if="authStore.user?.avatar_path"
+              :src="authStore.user.avatar_path"
+              alt="Аватар"
+              class="h-full w-full object-cover"
+          />
+          <template v-else>
+            {{ authStore.user?.name ? authStore.user.name.charAt(0) : 'U' }}
+          </template>
         </div>
+
+<!--        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-sm text-blue-700 uppercase tracking-wider group-hover:bg-blue-200 transition-colors">
+          {{ userInitials }}
+        </div>-->
 
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
