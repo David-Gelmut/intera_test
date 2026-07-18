@@ -253,8 +253,8 @@
               <div
                   class="px-4 py-2 text-sm shadow-2xs leading-relaxed break-words w-fit max-w-full relative"
                   :class="isMyMessage(msg.user_id)
-                  ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-14 pb-5'
-                  : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-12 pb-5'"
+                  ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-4 pb-5'
+                  : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-4 pb-5'"
               >
                 <!-- Вывод текста -->
                 <span v-if="msg.text" class="block whitespace-pre-wrap">{{ msg.text }}</span>
