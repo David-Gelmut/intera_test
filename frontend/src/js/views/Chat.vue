@@ -261,7 +261,63 @@
 
                 <!-- Вывод вложений (attachments) -->
                 <div v-if="msg.attachments && msg.attachments.length > 0" class="space-y-2 mt-2">
-                  <!-- ... ваш старый v-for="file in msg.attachments" для картинок/видео/файлов ... -->
+                  <div v-if="msg.attachments && msg.attachments.length > 0" v-viewer class="space-y-2 mt-2">
+                    <div v-for="file in msg.attachments" :key="file.id">
+                      <!-- Если файл — КАРТИНКА -->
+                      <div v-if="file.file_type === 'image'" class="max-w-xs">
+                        <!-- УБРАЛИ @click, плагин сам обработает нажатие -->
+                        <img
+                            :src="getFileUrl(file.file_path)"
+                            alt="Изображение"
+                            class="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity border border-slate-100/50"
+                        />
+                      </div>
+                      <!-- Если файл — ВИДЕО -->
+                      <div v-else-if="file.file_type === 'video'" class="max-w-xs sm:max-w-sm my-1 relative group">
+                        <video
+                            :src="getFileUrl(file.file_path)"
+                            controls
+                            playsinline
+                            preload="metadata"
+                            class="rounded-xl max-h-64 w-full object-contain bg-black border border-slate-100/10 shadow-sm"
+                        >
+                          Ваш браузер не поддерживает воспроизведение видео.
+                        </video>
+
+                        <!-- Кнопка развертывания, которая появляется при наведении на видео -->
+                        <button
+                            type="button"
+                            @click="openVideoModal(getFileUrl(file.file_path))"
+                            class="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/80"
+                            title="Развернуть на весь экран"
+                        >
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0l-6-6" />
+                          </svg>
+                        </button>
+                      </div>
+                      <!-- Если файл — ДОКУМЕНТ -->
+                      <div v-else class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-black/5 max-w-xs">
+                        <svg class="h-7 w-7 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <div class="flex flex-col min-w-0 flex-1">
+                      <span class="font-medium text-xs truncate" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-slate-800'">
+                        {{ file.file_name }}
+                      </span>
+                          <a
+                              target="_blank"
+                              download="true"
+                              :href="getFileUrl(file.file_path)"
+                              class="text-[10px] underline font-semibold mt-0.5 text-left cursor-pointer transition-colors"
+                              :class="isMyMessage(msg.user_id) ? 'text-indigo-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-800'"
+                          >
+                            Скачать
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- СЛУЖЕБНЫЙ БЛОК: Время, Изменено, Галочки (Позиционируется абсолютно внизу справа облачка) -->
@@ -406,7 +462,7 @@
               <!-- Кнопка отправки «Самолетик» (Разблокируется, если есть текст ИЛИ прикреплен файл) -->
               <button
                   type="submit"
-                  :disabled="!newMessageText.trim() && selectedFiles.length === 0"
+                  :disabled="!newMessageText && selectedFiles.length === 0"
                   class="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-500 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer shrink-0"
                   title="Отправить сообщение"
               >
