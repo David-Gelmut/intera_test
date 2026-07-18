@@ -228,7 +228,7 @@
         </div>
 
         <!-- Лента сообщений -->
-        <div ref="messageContainer" class="flex-1 flex flex-col justify-end p-4 md:p-6 overflow-y-auto space-y-4">
+        <div ref="messageContainer" class="flex-1 flex flex-col  p-4 md:p-6 overflow-y-auto space-y-4">
 
           <div class="flex-1"></div>
 
