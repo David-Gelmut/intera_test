@@ -349,15 +349,15 @@
 
               <!-- ================= АДАПТИВНОЕ КОНТЕКСТНОЕ МЕНЮ ДЕЙСТВИЙ ================= -->
               <div 
-                class="absolute top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-lg p-1 transition-all duration-150 z-20"
+                class="absolute bg-white border border-slate-100 rounded-xl shadow-lg p-1 transition-all duration-150 z-20"
                 :class="[
                   // Логика отображения по клику (работает везде: и ПК, и Мобилка)
                   activeMessageId === msg.id 
-                    ? 'opacity-100 visible translate-y-0' 
-                    : 'opacity-0 invisible -translate-y-1',
-                  
+                  ? 'opacity-100 visible scale-100' 
+                  : 'opacity-0 invisible scale-95',
+                 
                   // Выравнивание углов (свои — справа, чужие — слева)
-                  isMyMessage(msg.user_id) ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
+                  isMyMessage(msg.user_id) ? 'right-2 origin-right' : 'left-2 origin-left',
                   // Выравнивание по центру высоты (чтобы не расталкивать сообщения по вертикали)
                   'top-1/2 -translate-y-1/2',
                   // Структура: на мобилке вертикальное меню, на ПК (md:) — аккуратный горизонтальный ряд
@@ -373,6 +373,16 @@
                   <div 
                     v-if="activeEmojiPickerId === msg.id"
                     @click.stop
+                    class="absolute z-30 shadow-2xl rounded-xl overflow-hidden bg-white border border-slate-100 bottom-full mb-2"
+                    :class="[
+                      isMyMessage(msg.user_id) ? 'right-0' : 'left-0'
+                    ]"
+                  >
+                    <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
+                  </div>
+                  <!--div 
+                    v-if="activeEmojiPickerId === msg.id"
+                    @click.stop
                     class="absolute z-30 shadow-2xl rounded-xl overflow-hidden bg-white border border-slate-100"
                     :class="[
                       'bottom-full mb-2 md:bottom-auto md:top-full md:mt-2',
@@ -380,7 +390,9 @@
                     ]"
                   >
                     <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
-                  </div>
+                  </div-->
+
+
                 </div>
 
                 <!-- Кнопка: Ответить -->
