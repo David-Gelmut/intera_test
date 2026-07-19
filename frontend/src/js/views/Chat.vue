@@ -234,7 +234,7 @@
           <div class="flex-1"></div>
 
           <div
-              @click="handleMessageClick(msg.id)"
+              @click="handleMessageClick($event, msg)"
               v-for="msg in chatStore.messages"
               :key="msg.id"
               class="flex flex-col max-w-[85%] md:max-w-[70%] group"
@@ -597,15 +597,24 @@ const BACKEND_URL = axios.defaults.baseURL;
 // Хранит ID сообщения, на которое нажали на мобилке
 const activeMessageId = ref(null)
 
-const handleMessageClick = (msgId) => {
-  // Проверяем, что это мобильное/сенсорное устройство
-  if (window.matchMedia('(pointer: coarse)').matches) {
-    // Если нажали на то же сообщение — закрываем, если на другое — открываем его
-    activeMessageId.value = activeMessageId.value === msgId ? null : msgId
+const handleMessageClick = (event, msg) => {
+  // На ПК клики для открытия меню не нужны
+  if (!window.matchMedia('(pointer: coarse)').matches) return
+  
+  // Проверяем, что это наше сообщение (для безопасности)
+  if (msg && msg.id) {
+    // Важно: останавливаем всплытие, чтобы глобальный клик не закрыл меню сразу же
+    event.stopPropagation()
+    
+    // Если нажали на то же самое — закрываем, на другое — открываем его
+    activeMessageId.value = activeMessageId.value === msg.id ? null : msg.id
   }
 }
 
-
+// Функция закрытия меню при клике в любое внешнее место
+const closeActionsMenu = () => {
+  activeMessageId.value = null
+}
 
 // Выбор и открытие чата
 const selectChat = async (id, user = null) => {
@@ -743,8 +752,22 @@ function onSelectEmoji(emoji) {
 }
 
 onMounted(() => {
+  document.addEventListener('click', closeActionsMenu)
   chatStore.fetchChats();
   chatStore.fetchUsersList();
+  
+});
+
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeActionsMenu)
+
+  if (chatStore.activeChatId) {
+    window.Echo.leaveChannel(`chat.${chatStore.activeChatId}`);
+    chatStore.activeChatId = null;
+  }
+  
+  console.log('Пользователь покинул чат. Полная очистка ресурсов...');
 });
 
 // Клик по контакту
@@ -945,14 +968,7 @@ async function syncMissedMessages() {
   }
 }
 
-onUnmounted(() => {
 
-  if (chatStore.activeChatId) {
-    window.Echo.leaveChannel(`chat.${chatStore.activeChatId}`);
-    chatStore.activeChatId = null;
-  }
-  console.log('Пользователь покинул чат. Полная очистка ресурсов...');
-});
 
 
 </script>
