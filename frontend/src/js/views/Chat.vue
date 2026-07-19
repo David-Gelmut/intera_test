@@ -235,7 +235,7 @@
 
           <div
               @click="handleMessageClick($event, msg)"
-              v-for="msg in chatStore.messages"
+              v-for="(msg, index) in chatStore.messages"
               :key="msg.id"
               class="flex flex-col max-w-[85%] md:max-w-[70%] group"
               :class="[
@@ -248,8 +248,8 @@
               {{ msg.user?.name }}
             </span>
 
-            <!-- Контейнер: Облачко + Кнопки действий (карандаш/корзина) -->
-            <div class="flex items-center gap-2 max-w-full" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
+            <!-- Контейнер: Облачко + Кнопки действий-->     
+            <div class="flex items-center gap-2 max-w-full relative" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
 
               <!-- Облачко сообщения -->
               <div
@@ -342,41 +342,115 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
+
                 </div>
 
               </div>
 
-              <!-- КНОПКИ ДЕЙСТВИЙ: Появляются только при наведении мышки (group-hover) и только для НАШИХ сообщений -->
+              <!-- ================= АДАПТИВНОЕ КОНТЕКСТНОЕ МЕНЮ ДЕЙСТВИЙ ================= -->
               <div 
-                v-if="isMyMessage(msg.user_id)" 
-                class="flex items-center bg-white border border-slate-100 rounded-lg shadow-2xs transition-opacity"
+                class="ml-auto bg-white border border-slate-100 rounded-xl shadow-lg p-1 transition-all duration-150 z-20"
                 :class="[
-                  // Если сообщение активно на мобилке — показываем кнопки,
-                  // иначе на мобилках они скрыты (opacity-0), а на ПК (md:) показываются при group-hover
+                  // Логика отображения: мобилка (клик) vs ПК (hover)
                   activeMessageId === msg.id 
-                    ? 'opacity-100 visible' 
-                    : 'opacity-0 invisible md:group-hover:opacity-100 md:group-hover:visible'
+                    ? 'opacity-100 visible translate-y-0' 
+                    : 'opacity-0 invisible -translate-y-1 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0',
+                  isMyMessage(msg.user_id) ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
+                  // Мобильный вид: вертикальное меню, абсолютное позиционирование поверх элементов
+                  // ПК вид (md:): обычная горизонтальная строчка в flex-потоке
+                  'absolute top-full mt-1 left-0 flex flex-col w-40 md:static md:mt-0 md:flex-row md:w-auto md:gap-0.5 md:shadow-2xs md:rounded-lg'
                 ]"
               >
+                <!-- Блок реакций-->
+    
 
-                <!-- Редактировать -->
-                <button @click.stop="startEdit(msg)" type="button" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-l-lg hover:bg-slate-50 cursor-pointer" title="Редактировать">
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                </button>
-                
-                <!-- Удалить -->
-                <button @click.stop="deleteMessage(msg.id)" type="button" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-r-lg hover:bg-rose-50 border-l border-slate-100 cursor-pointer" title="Удалить для всех">
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-              </div>       
+                <div class="flex items-center p-1.5 border-b border-slate-100 md:border-b-0 md:border-r border-slate-100 text-base gap-1.5 relative">
+                  
+                  <!-- Быстрые реакции -->
+                  <button 
+                    v-for="emoji in quickEmojis" 
+                    :key="emoji"
+                    @click.stop="addReaction(msg.id, emoji)" 
+                    class="hover:scale-125 transition-transform cursor-pointer"
+                  >
+                    {{ emoji }}
+                  </button>
 
+                  <!-- Кнопка "+" для открытия полноценного vue3-emoji-picker -->
+                  <button 
+                    @click="toggleExtendedEmojis($event, msg.id)" 
+                    type="button" 
+                    class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                    title="Все реакции"
+                  >
+                    ➕
+                  </button>
+
+                  <!-- ВСПЛЫВАЮЩЕЕ ОКНО: Библиотека vue3-emoji-picker -->
+                  <div 
+                    v-if="activeEmojiPickerId === msg.id"
+                    @click.stop
+                    class="absolute z-30 shadow-2xl rounded-xl overflow-hidden bg-white border border-slate-100"
+                    :class="[
+                      // На мобилках открываем вверх (над меню), на ПК — выпадает вниз под кнопку
+                      'bottom-full mb-2 left-0 md:bottom-auto md:top-full md:mt-2 md:left-0'
+                    ]"
+                  >
+                    <!-- Компонент библиотеки -->
+                    <EmojiPicker 
+                      :picker-type="'popup'"
+                      :native="true"
+                      :theme="'light'"
+                      :hide-group-names="true"
+                      :disable-skin-tones="true"
+                      class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm"
+                      @select="onSelectEmojiContext($event, msg.id)"
+                    />
+                  </div>
+
+                </div>
+
+                <!-- Кнопка: Ответить (Доступно всем) -->
+                <button @click.stop="replyMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Ответить">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                  <span class="md:hidden text-slate-600 font-medium">Ответить</span>
+                </button>
+
+                <!-- Кнопка: Копировать текст (Доступно всем) -->
+                <button @click.stop="copyText(msg.text)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Копировать">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                  <span class="md:hidden text-slate-600 font-medium">Копировать</span>
+                </button>
+
+                <!-- Кнопка: Переслать (Доступно всем) -->
+                <button @click.stop="forwardMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Переслать">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  <span class="md:hidden text-slate-600 font-medium">Переслать</span>
+                  </button>
+
+                <!-- ДЕЙСТВИЯ ТОЛЬКО ДЛЯ МОИХ СООБЩЕНИЙ -->
+                <template v-if="isMyMessage(msg.user_id)">
+                  <!-- Разделительная линия на мобилке -->
+                  <div class="h-px bg-slate-100 my-1 md:hidden"></div>
+
+                  <!-- Редактировать -->
+                  <button @click.stop="startEdit(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Редактировать">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    <span class="md:hidden text-slate-600 font-medium">Изменить</span>
+                  </button>
+                  
+                  <!-- Удалить -->
+                  <button @click.stop="deleteMessage(msg.id)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 cursor-pointer text-xs md:text-sm" title="Удалить для всех">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    <span class="md:hidden text-rose-600 font-medium">Удалить</span>
+                  </button>
+                </template>
+
+              </div>
 
             </div>
           </div>
         </div>
-
-
-        <!-- Лента сообщений -->
 
         <!-- Подвал чата: Ввод текста и прикрепление файлов -->
         <div class="p-4 border-t border-slate-200 bg-white shadow-2xs relative">
@@ -597,6 +671,34 @@ const BACKEND_URL = axios.defaults.baseURL;
 // Хранит ID сообщения, на которое нажали на мобилке
 const activeMessageId = ref(null)
 
+
+// ================= БЛОК РЕАКЦИЙ =================
+
+// Хранит ID сообщения, у которого открыт полноценный пикер
+const activeEmojiPickerId = ref(null)
+
+// Массив быстрых реакций оставляем для удобства (как в Telegram)
+const quickEmojis = ['❤️', '👍', '🔥', '😂']
+
+
+const toggleExtendedEmojis = (event, msgId) => {
+  event.stopPropagation()
+  activeEmojiPickerId.value = activeEmojiPickerId.value === msgId ? null : msgId
+}
+
+// Функция, которая срабатывает при выборе любого эмодзи из библиотеки
+const onSelectEmojiContext = (emojiObject, msgId) => {
+  // emojiObject.i содержит сам символ смайлика (например, '🎉')
+  if (emojiObject && emojiObject.i) {
+    addReaction(msgId, emojiObject.i)
+  }
+  // Закрываем панель после выбора
+  activeEmojiPickerId.value = null
+  activeMessageId.value = null
+}
+
+// ================= ФУНКЦИОНАЛ КОНТЕКСТННОГО МЕНЮ =================
+
 const handleMessageClick = (event, msg) => {
   // На ПК клики для открытия меню не нужны
   if (!window.matchMedia('(pointer: coarse)').matches) return
@@ -615,6 +717,42 @@ const handleMessageClick = (event, msg) => {
 const closeActionsMenu = () => {
   activeMessageId.value = null
 }
+
+// ================= ФУНКЦИОНАЛ ДЕЙСТВИЙ =================
+
+// 1. Поставить реакцию
+const addReaction = (msgId, emoji) => {
+  console.log(`Добавлена реакция ${emoji} к сообщению ${msgId}`)
+  closeActionsMenu()
+}
+
+// 2. Скопировать текст в буфер обмена
+const copyText = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    alert('Текст скопирован!')
+  } catch (err) {
+    console.error('Не удалось скопировать:', err)
+  }
+  closeActionsMenu()
+}
+
+// 3. Ответить на сообщение
+const replyMessage = (msg) => {
+  console.log('Ответ на сообщение:', msg)
+  // Здесь логика: запись msg в переменную replyToMessage, чтобы отобразить плашку над инпутом ввода
+  closeActionsMenu()
+}
+
+// 4. Переслать сообщение
+const forwardMessage = (msg) => {
+  console.log('Переслать сообщение:', msg)
+  // Здесь логика открытия модального окна со списком контактов/чатов
+  closeActionsMenu()
+}
+
+// ================= ФУНКЦИОНАЛ ЧАТА =================
+
 
 // Выбор и открытие чата
 const selectChat = async (id, user = null) => {
