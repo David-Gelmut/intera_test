@@ -1,5 +1,6 @@
 <template>
-  <div class="space-y-6">
+
+  <!--div class="space-y-6">
     <div class="border-b border-slate-200 pb-5">
       <h1 class="text-2xl font-bold tracking-tight text-slate-900">Сообщения (Real-time мессенджер)</h1>
       <p>Коммуникационное ядро платформы, обеспечивающее мгновенную и безопасную связь между всеми участниками экосистемы.</p>
@@ -15,7 +16,7 @@
 
     </div>
 
-  </div>
+  </div-->
   <div
       class=" flex h-[calc(100vh-theme(spacing.16)-theme(spacing.1))] border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs font-sans">
 
@@ -233,6 +234,7 @@
           <div class="flex-1"></div>
 
           <div
+              @click="handleMessageClick(msg.id)"
               v-for="msg in chatStore.messages"
               :key="msg.id"
               class="flex flex-col max-w-[85%] md:max-w-[70%] group"
@@ -345,16 +347,29 @@
               </div>
 
               <!-- КНОПКИ ДЕЙСТВИЙ: Появляются только при наведении мышки (group-hover) и только для НАШИХ сообщений -->
-              <div v-if="isMyMessage(msg.user_id)" class="flex items-center bg-white border border-slate-100 rounded-lg shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity">
+              <div 
+                v-if="isMyMessage(msg.user_id)" 
+                class="flex items-center bg-white border border-slate-100 rounded-lg shadow-2xs transition-opacity"
+                :class="[
+                  // Если сообщение активно на мобилке — показываем кнопки,
+                  // иначе на мобилках они скрыты (opacity-0), а на ПК (md:) показываются при group-hover
+                  activeMessageId === msg.id 
+                    ? 'opacity-100 visible' 
+                    : 'opacity-0 invisible md:group-hover:opacity-100 md:group-hover:visible'
+                ]"
+              >
+
                 <!-- Редактировать -->
-                <button @click="startEdit(msg)" type="button" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-l-lg hover:bg-slate-50 cursor-pointer" title="Редактировать">
+                <button @click.stop="startEdit(msg)" type="button" class="p-1.5 text-slate-400 hover:text-blue-600 rounded-l-lg hover:bg-slate-50 cursor-pointer" title="Редактировать">
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                 </button>
+                
                 <!-- Удалить -->
-                <button @click="deleteMessage(msg.id)" type="button" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-r-lg hover:bg-rose-50 border-l border-slate-100 cursor-pointer" title="Удалить для всех">
+                <button @click.stop="deleteMessage(msg.id)" type="button" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-r-lg hover:bg-rose-50 border-l border-slate-100 cursor-pointer" title="Удалить для всех">
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
-              </div>
+              </div>       
+
 
             </div>
           </div>
@@ -577,7 +592,20 @@ let currentUserId = authStore.user?.id || null;
 const isAvatarModalOpen = ref(false);
 
 const isMyMessage = (id) => id === currentUserId;
+
 const BACKEND_URL = axios.defaults.baseURL;
+// Хранит ID сообщения, на которое нажали на мобилке
+const activeMessageId = ref(null)
+
+const handleMessageClick = (msgId) => {
+  // Проверяем, что это мобильное/сенсорное устройство
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    // Если нажали на то же сообщение — закрываем, если на другое — открываем его
+    activeMessageId.value = activeMessageId.value === msgId ? null : msgId
+  }
+}
+
+
 
 // Выбор и открытие чата
 const selectChat = async (id, user = null) => {

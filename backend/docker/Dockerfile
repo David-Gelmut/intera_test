@@ -22,11 +22,11 @@ RUN apk add --no-cache \
     libxml2-dev \
     linux-headers
 
-# Настройка расширения GD перед установкой
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+# Скачиваем скрипт напрямую из релизов GitHub (вместо Docker Hub)
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
 # Установка PHP расширений
-RUN docker-php-ext-install \
+RUN install-php-extensions \
     pdo_mysql \
     mbstring \
     exif \
@@ -34,49 +34,9 @@ RUN docker-php-ext-install \
     bcmath \
     gd \
     dom \
-    sockets
+    sockets \
+    redis
 
-COPY redis.tgz /tmp/redis.tgz
-
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-    && pecl install /tmp/redis.tgz \
-    && rm /tmp/redis.tgz \
-    && docker-php-ext-enable redis \
-    && apk del .build-deps
-
-# RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-#     && curl -fsSLk https://pecl.php.net/get/redis -o redis.tgz \
-#     && pecl install redis.tgz \
-#     && rm redis.tgz \
-#     && docker-php-ext-enable redis \
-#     && apk del .build-deps
-#
-# RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-#     && curl -fsSLk https://pecl.php.net/get/redis -o redis.tgz \
-#     && pecl install redis.tgz \
-#     && rm redis.tgz \
-#     && docker-php-ext-enable redis \
-#     && apk del .build-deps
-#
-# RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS coreutils ca-certificates \
-#     && update-ca-certificates \
-#     && mkdir -p /usr/src/php/ext/redis \
-#     && curl -fsSL https://pecl.php.net/get/redis | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
-#     && docker-php-ext-install redis \
-#     && apk del .build-deps
-
-# RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
-#     && pecl install redis \
-#     && docker-php-ext-enable redis \
-#     && apk del .build-deps
-
-# RUN apk add --no-cache --virtual .build-deps \
-#         $PHPIZE_DEPS \
-#         coreutils \
-#     && mkdir -p /usr/src/php/ext/redis \
-#     && curl -fsSL https://pecl.php.net/get/redis | tar xvz -C /usr/src/php/ext/redis --strip-components=1 \
-#     && docker-php-ext-install redis \
-#     && apk del .build-deps
 
 # Устанавливаем Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -87,7 +47,7 @@ WORKDIR /var/www
 # Копируем исходный код проекта (включая локальный vendor)
 COPY . .
 
-#RUN composer install --no-dev --optimize-autoloader --no-scripts
+# RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Создаем структуру папок Laravel и выставляем безопасные права www-data
 RUN mkdir -p /var/www/storage/framework/cache/data \
