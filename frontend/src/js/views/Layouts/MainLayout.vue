@@ -5,7 +5,7 @@
       <Header />
       <div class="flex flex-col flex-1">
         <div class="flex flex-1 flex-col transition-all duration-300">
-          <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+          <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto  overflow-hidden">
             <router-view v-slot="{ Component }">
               <component :is="Component" />
 <!--              <transition name="fade" mode="out-in">
@@ -16,7 +16,7 @@
         </div>
       </div>
     </div>
-    <Footer />
+    <!--Footer /-->
     <ToastContainer />
   </div>
 </template>

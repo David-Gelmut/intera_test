@@ -18,7 +18,7 @@
 
   </div-->
   <div
-      class=" flex h-[calc(100vh-theme(spacing.16)-theme(spacing.1))] border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs font-sans">
+      class="flex h-[calc(100vh-theme(spacing.16)-theme(spacing.1))] border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs font-sans">
 
     <!-- Левая колонка: Переключатель Чаты / Контакты -->
     <div
@@ -236,8 +236,9 @@
           <div
               @click="handleMessageClick($event, msg)"
               v-for="(msg, index) in chatStore.messages"
+              :id="`msg-${msg.id}`"
               :key="msg.id"
-              class="flex flex-col max-w-[85%] md:max-w-[70%] group"
+              class="flex flex-col max-w-[85%] md:max-w-[70%] group transition-transform duration-300"
               :class="[
                 isMyMessage(msg.user_id) ? 'ml-auto items-end' : 'items-start',
                 index === 0 ? 'mt-auto' : ''
@@ -249,7 +250,7 @@
             </span>
 
             <!-- Контейнер: Облачко + Кнопки действий-->     
-            <div class="flex items-center gap-2 max-w-full relative" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
+            <div class="message-bubble flex items-center gap-2 max-w-full relative transition-all" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
 
               <!-- Облачко сообщения -->
               <div
@@ -258,6 +259,23 @@
                   ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-4 pb-5'
                   : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-4 pb-5'"
               >
+               
+                <!-- ================= БЛОК ЦИТАТЫ ВНУТРИ ОБЛАЧКА ================= -->
+                <!-- Если у сообщения есть parent_id, выводим плашку-ссылку -->
+                <div 
+                  v-if="msg.parent_id"
+                  @click.stop="scrollToMessage(msg.parent_id)"
+                  class="mb-1.5 p-2 rounded-lg text-xs border-l-2 bg-black/5 cursor-pointer hover:bg-black/10 transition-colors flex flex-col min-w-[120px] max-w-full"
+                  :class="isMyMessage(msg.user_id) ? 'border-white/60 text-indigo-100' : 'border-indigo-500 text-slate-500'"
+                >
+                  <span class="font-semibold" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-indigo-600'">
+                    {{ getParentMessageAuthor(msg.parent_id) }}
+                  </span>
+                  <span class="truncate opacity-90">
+                    {{ getParentMessageText(msg.parent_id) }}
+                  </span>
+                </div>             
+                
                 <!-- Вывод текста -->
                 <span v-if="msg.text" class="block whitespace-pre-wrap">{{ msg.text }}</span>
 
@@ -380,32 +398,56 @@
                   >
                     <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
                   </div>
-                  <!--div 
-                    v-if="activeEmojiPickerId === msg.id"
-                    @click.stop
-                    class="absolute z-30 shadow-2xl rounded-xl overflow-hidden bg-white border border-slate-100"
-                    :class="[
-                      'bottom-full mb-2 md:bottom-auto md:top-full md:mt-2',
-                      isMyMessage(msg.user_id) ? 'right-0' : 'left-0'
-                    ]"
-                  >
-                    <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
-                  </div-->
-
-
+            
                 </div>
 
+
+
+
+
                 <!-- Кнопка: Ответить -->
+                <!--button 
+                  @click.stop="replyMessage(msg)" 
+                  type="button" 
+                  class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" 
+                  title="Ответить"
+                >
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  <span class="md:hidden text-slate-600 font-medium">Ответить</span>
+                </button-->
+
+
+
                 <button @click.stop="replyMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Ответить">
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                   <span class="md:hidden text-slate-600 font-medium">Ответить</span>
                 </button>
 
+
+
+
                 <!-- Кнопка: Копировать текст -->
-                <button @click.stop="copyText(msg.text)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Копировать">
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                  <span class="md:hidden text-slate-600 font-medium">Копировать</span>
-                </button>
+                <button 
+                  @click.stop="copyText(msg.text)" 
+                  type="button" 
+                  class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm"              
+                  title="Копировать"
+                >
+                  <!-- Иконка меняется при успешном копировании -->              
+                  <svg v-if="!isCopied" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="12" height="12" rx="2" stroke-linecap="round" stroke-linejoin="round"></rect>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <svg v-else class="h-3.5 w-3.5 md:h-3.5 md:w-3.5 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+
+                  <!-- Текст меняется при успешном копировании -->         
+                  <span class="md:hidden md:text-xs text-slate-600 font-medium">{{ isCopied ? 'Скопировано!' : 'Копировать' }}</span>
+                </button>              
+
 
                 <!-- Кнопка: Переслать -->
                 <button @click.stop="forwardMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Переслать">
@@ -494,6 +536,42 @@
               </button>
             </div>
 
+
+            <!-- Контейнер нижней панели ввода сообщений -->
+            <div class="border-t border-slate-100 bg-white p-4">
+              
+              <!-- ПЛАШКА ОТВЕТА (Появляется только если есть replyingMessage) -->
+              <div 
+                v-if="replyingMessage" 
+                class="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 border-l-4 border-indigo-500 rounded-r-lg mb-2 text-xs transition-all animate-fade-in"
+              >
+                <div class="flex flex-col min-w-0">
+                  <!-- Имя того, на чье сообщение отвечаем -->
+                  <span class="font-semibold text-indigo-600 truncate">
+                    Ответ пользователю {{ replyingMessage.user?.name || 'Собеседник' }}
+                  </span>
+                  <!-- Текст цитируемого сообщения -->
+                  <span class="text-slate-500 truncate max-w-md">
+                    {{ replyingMessage.text }}
+                  </span>
+                </div>
+
+                <!-- Кнопка отмены ответа (крестик) -->
+                <button 
+                  @click="cancelReply" 
+                  type="button" 
+                  class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors cursor-pointer"
+                  title="Отменить ответ"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+
+
             <!-- Основная строка управления (Кнопки и Инпут) -->
             <div class="flex items-center gap-2 md:gap-3">
 
@@ -520,6 +598,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
+
+          
+             
 
 
 
@@ -623,6 +704,23 @@
     </div>
   </div>
 
+  <!-- Bсплывающее уведомление для контекстного меню-->
+  <transition
+    enter-active-class="transition ease-out duration-200"
+    enter-from-class="transform translate-y-4 opacity-0"
+    enter-to-class="transform translate-y-0 opacity-100"
+    leave-active-class="transition ease-in duration-150"
+    leave-from-class="transform translate-y-0 opacity-100"
+    leave-to-class="transform translate-y-4 opacity-0"
+  >
+    <div 
+      v-if="toastContext.show" 
+      class="fixed bottom-40 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-xs border border-slate-800"
+    >
+      <span>✨</span>
+      <span>{{ toastContext.message }}</span>
+    </div>
+  </transition>
 
 
 </template>
@@ -654,6 +752,55 @@ const BACKEND_URL = axios.defaults.baseURL;
 // Хранит ID сообщения, на которое нажали на мобилке
 const activeMessageId = ref(null)
 
+const scrollToMessage = (parentId) => {
+  if (!parentId) return
+
+  // Находим оригинальное сообщение в массиве для проверки типов
+  const parentMsg = chatStore.messages.find(m => Number(m.id) === Number(parentId))
+  if (!parentMsg) return
+
+  // Находим главный HTML-контейнер сообщения по ID
+  const element = document.getElementById(`msg-${parentId}`)
+  
+  if (element) {
+    // 1. Плавно скроллим к оригинальному сообщению, центрируя его на экране
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    
+    // Классы мягкого акцента для ВСЕГО блока сообщения
+    // scale-[1.03] идеален для крупных блоков, чтобы верстка не перекрывала соседние элементы
+    const scaleClasses = ['scale-[1.2]', 'z-30', 'relative']
+
+    // 2. Быстро и мягко увеличиваем весь блок
+    element.classList.add('duration-200', 'transition-transform', ...scaleClasses)
+    
+    // 3. Через 500мс плавно возвращаем его в исходное состояние
+    setTimeout(() => {
+      element.classList.remove(...scaleClasses)
+      element.classList.add('duration-500')
+      
+      // Полностью очищаем временные классы анимации после завершения
+      setTimeout(() => {
+        element.classList.remove('duration-500', 'duration-200', 'transition-transform')
+      }, 500)
+    }, 500)
+  }
+}
+
+
+// Вспомогательная функция для поиска текста родительского сообщения прямо на фронтенде
+const getParentMessageText = (parentId) => {
+  //console.log(chatStore.messages);
+  //console.log(parentId);
+  const parentMsg = chatStore.messages.find(m => Number(m.id) ===  Number(parentId));
+    console.log(parentMsg);
+  return parentMsg ? parentMsg.text : 'Сообщение удалено или недоступно'
+}
+
+// Вспомогательная функция для поиска имени автора цитаты
+const getParentMessageAuthor = (parentId) => {
+  const parentMsg = chatStore.messages.find(m => Number(m.id) ===  Number(parentId))
+  return parentMsg?.user?.name || 'Собеседник'
+}
 
 // ================= БЛОК РЕАКЦИЙ =================
 
@@ -713,23 +860,72 @@ const addReaction = (msgId, emoji) => {
   closeActionsMenu()
 }
 
-// 2. Скопировать текст в буфер обмена
+// 2. Скопировать текст в буфер
+const isCopied = ref(false)
+// Состояние для всплывающего уведомления
+const toastContext = ref({
+  show: false,
+  message: ''
+})
+
+
 const copyText = async (text) => {
   try {
+    // Копируем текст в буфер обмена
     await navigator.clipboard.writeText(text)
-    alert('Текст скопирован!')
+    closeActionsMenu();
+    // Включаем статус "Скопировано"
+    isCopied.value = true;
+    // Показываем всплывающее уведомление
+    toastContext.value = {
+      show: true,
+      message: 'Текст скопирован в буфер обмена'
+    }
+
+
+    // Через 2.5 секунды возвращаем исходную иконку/текст
+    setTimeout(() => {
+      toastContext.value.show = false
+      isCopied.value = false;
+    }, 2500)
+
   } catch (err) {
-    console.error('Не удалось скопировать:', err)
-  }
-  closeActionsMenu()
+    
+     toastContext.value = {
+      show: true,
+      message: 'Не удалось скопировать текст'
+    }
+    setTimeout(() => { toast.value.show = false }, 2500)
+    console.error('Не удалось скопировать текст: ', err);
+    //alert('Ошибка при копировании');
+  } 
+
+  
 }
 
 // 3. Ответить на сообщение
+
+// Хранит объект сообщения, на которое мы сейчас отвечаем
+const replyingMessage = ref(null)
+
 const replyMessage = (msg) => {
-  console.log('Ответ на сообщение:', msg)
+  console.log('Ответ на сообщение:', msg);
+  replyingMessage.value = msg;
   // Здесь логика: запись msg в переменную replyToMessage, чтобы отобразить плашку над инпутом ввода
-  closeActionsMenu()
+  closeActionsMenu();
+
+   // Прогрессивное улучшение: автоматически ставим фокус в поле ввода текста, если у вас есть ref на него
+  // nextTick(() => { inputRef.value?.focus() })
 }
+
+// Функция для отмены ответа (клик на крестик)
+const cancelReply = () => {
+  replyingMessage.value = null
+}
+
+
+
+
 
 // 4. Переслать сообщение
 const forwardMessage = (msg) => {
@@ -933,7 +1129,7 @@ const sendMessage = async () => {
   if (editingMessageId.value) {
     try {
       const response = await axios.put(`/api/messages/${editingMessageId.value}`, {
-        text: newMessageText.value
+        text: newMessageText.value,
       });
 
       // Обновляем сообщение локально на экране
@@ -949,6 +1145,11 @@ const sendMessage = async () => {
 
   const formData = new FormData();
   formData.append('chat_id', chatStore.activeChatId);
+
+  // Если мы отвечаем на сообщение, добавляем его ID в FormData для бэка
+  if (replyingMessage.value) {
+    formData.append('parent_id', replyingMessage.value.id);
+  }
 
   if (newMessageText.value.trim()) {
     formData.append('text', newMessageText.value);
@@ -969,6 +1170,9 @@ const sendMessage = async () => {
   newMessageText.value = '';
   selectedFiles.value = [];
   if (fileInput.value) fileInput.value.value = '';
+
+// Сбрасываем плашку ответа на фронтенде, чтобы следующий ввод был обычным сообщением
+  replyingMessage.value = null;
 
   scrollToBottom();
 };

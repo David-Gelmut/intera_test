@@ -55,6 +55,7 @@ class MessageController extends Controller
     public function sendMessage(Request $request, int $chatId): JsonResponse
     {
         $request->validate([
+            'parent_id'=>'nullable|exists:messages,id',
             'text' => 'nullable|string|max:5000',
             'files'   => 'nullable|array',
             'files.*' => 'file|max:102400', // 100MB
@@ -69,6 +70,7 @@ class MessageController extends Controller
         }
 
         $message = Message::create([
+            'parent_id' => $request->parent_id,
             'chat_id' => $chatId,
            // 'user_id' => auth()->id(),
             'user_id' => $request->user()->id,
