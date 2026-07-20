@@ -28,4 +28,9 @@ class Message extends Model
     {
         return $this->hasMany(Attachment::class);
     }
+    
+    public function reactions()
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
 }

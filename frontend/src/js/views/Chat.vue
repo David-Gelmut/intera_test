@@ -363,6 +363,32 @@
 
                 </div>
 
+                <!-- ================= БЛОК СЧЕТЧИКОВ РЕАКЦИЙ ПОД СООБЩЕНИЕМ ================= -->
+                <div 
+                  v-if="msg.reactions && msg.reactions.length > 0" 
+                  class="flex flex-wrap gap-1 mt-1 max-w-full"
+                  :class="isMyMessage(msg.user_id) ? 'justify-end' : 'justify-start'"
+                >
+                  <button
+                    v-for="group in msg.reactions"
+                    :key="group.emoji"
+                    @click.stop="addReaction(msg.id, group.emoji)"
+                    type="button"
+                    class="flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full border transition-all cursor-pointer select-none active:scale-95"
+                    :class="[
+                      group.isMy 
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-600 font-medium shadow-2xs' 
+                        : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'
+                    ]"
+                  >
+                    <!-- Сам эмодзи -->
+                    <span>{{ group.emoji }}</span>
+                    
+                    <!-- Количество (показываем, только если больше 1, чтобы интерфейс был чище) -->
+                    <!--span v-if="group.count > 0" class="text-[10px]">{{ group.count }}</span-->
+                  </button>
+                </div>
+
               </div>
 
               <!-- ================= АДАПТИВНОЕ КОНТЕКСТНОЕ МЕНЮ ДЕЙСТВИЙ ================= -->
@@ -382,12 +408,12 @@
                   'flex flex-col w-40 md:flex-row md:w-auto md:gap-0.5'
                 ]"
               >
-                <!-- БЛОК БЫСТРЫХ РЕАКЦИЙ -->
+                <!-- БЛОК БЫСТРЫХ РЕАКЦИЙ КОНТЕКСТНОЕ МЕНЮ-->
                 <div class="flex justify-around p-1.5 border-b border-slate-100 md:border-b-0 md:border-r border-slate-100 text-base gap-1.5 relative">
                   <button v-for="emoji in quickEmojis" :key="emoji" @click.stop="addReaction(msg.id, emoji)" class="hover:scale-125 transition-transform cursor-pointer">{{ emoji }}</button>
                   <button @click="toggleExtendedEmojis($event, msg.id)" type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Все реакции">➕</button>
 
-                  <!-- Полноценный пикер vue3-emoji-picker -->
+                
                   <div 
                     v-if="activeEmojiPickerId === msg.id"
                     @click.stop
@@ -398,7 +424,7 @@
                   >
                     <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
                   </div>
-            
+          
                 </div>
 
 
@@ -846,18 +872,89 @@ const handleMessageClick = (event, msg) => {
 }
 
 
-
-// Функция закрытия меню при клике в любое внешнее место
 const closeActionsMenu = () => {
   activeMessageId.value = null
+}
+
+// Функция закрытия меню при клике в любое внешнее место
+const closeEmojiPicker = () => {
+   activeEmojiPickerId.value = null
 }
 
 // ================= ФУНКЦИОНАЛ ДЕЙСТВИЙ =================
 
 // 1. Поставить реакцию
-const addReaction = (msgId, emoji) => {
-  console.log(`Добавлена реакция ${emoji} к сообщению ${msgId}`)
-  closeActionsMenu()
+
+
+// 1. Функция подсчета и группировки реакций для конкретного сообщения
+const getGroupedReactions = (msgReactions) => {
+  if (!msgReactions || !msgReactions.length) return []
+
+  const groups = {}
+
+  msgReactions.forEach(r => {
+    if (!groups[r.emoji]) {
+      groups[r.emoji] = {
+        emoji: r.emoji,
+        count: 0,
+        isMy: false
+      }
+    }
+    groups[r.emoji].count++
+    
+    // Проверяем, поставили ли эту реакцию именно вы
+    if (isMyMessage(r.user_id)) {
+      groups[r.emoji].isMy = true
+    }
+  })
+
+  // Возвращаем массив, отсортированный по количеству реакций (сначала популярные)
+  return Object.values(groups).sort((a, b) => b.count - a.count)
+}
+
+
+const addReaction = async (msgId, emoji) => {
+
+  closeActionsMenu();
+  closeEmojiPicker(); 
+
+  const msg = chatStore.messages.find(m => Number(m.id) === Number(msgId))
+  if (!msg) return
+
+  if (!msg.reactions) msg.reactions = []
+  
+  const myExistingReactionIdx = msg.reactions.findIndex(
+    r => r.emoji === emoji
+    && isMyMessage(r.user_id)
+  )
+
+  // Временно запоминаем старые реакции на случай ошибки запроса
+  const backupReactions = [...msg.reactions]
+
+  if (myExistingReactionIdx !== -1) {
+    msg.reactions.splice(myExistingReactionIdx, 1) // убираем локально
+  } else {
+    msg.reactions.push({ user_id: chatStore.currentUserId, emoji: emoji }) // добавляем локально
+  }
+
+  try {
+    const response = await  axios.post(`/api/messages/${msgId}/reactions`, {
+      emoji: emoji
+    })
+
+     console.log(response);
+
+    if (response.data && response.data.reactions) {
+      msg.reactions = response.data.reactions;
+      
+    }
+  } catch (error) {
+    console.error('Не удалось сохранить реакцию в БД:', error)
+    // Если сервер упал или выдал ошибку, возвращаем всё как было
+    msg.reactions = backupReactions
+    alert('Ошибка при отправке реакции')
+  }
+  //console.log(msg.reactions);
 }
 
 // 2. Скопировать текст в буфер

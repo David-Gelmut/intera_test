@@ -51,6 +51,8 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
 
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
 
+    Route::post('/messages/{message}/reactions', [MessageController::class, 'toggleReaction']);
+
 });
 
 //Route::middleware('auth:sanctum')->group(function () {

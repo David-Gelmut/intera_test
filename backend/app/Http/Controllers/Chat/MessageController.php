@@ -8,6 +8,7 @@ use App\Events\MessageUpdated;
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckUnreadMessageJob;
 use App\Models\Message;
+use App\Models\MessageReaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -32,6 +33,7 @@ class MessageController extends Controller
         $messages = Message::where('chat_id', $chatId)
             ->with('user:id,name')
             ->with('attachments')
+            ->with('reactions')
             ->oldest()
             ->get();
 
@@ -152,7 +154,7 @@ class MessageController extends Controller
 
         // Для сокета возвращаем ЧИСТЫЙ расшифрованный текст
         $message->text = $request->text;
-        $message->load('attachments', 'user');
+        $message->load('attachments', 'user', 'reactions');
 
         // Пушим в сокеты событие обновления, чтобы у собеседника текст тоже изменился
         broadcast(new MessageUpdated($message))->toOthers();
@@ -183,5 +185,45 @@ class MessageController extends Controller
         broadcast(new MessageDeleted($chatId, $messageId))->toOthers();
 
         return response()->json(['success' => true]);
+    }
+
+    public function toggleReaction(Request $request, Message $message)
+    {
+
+        $request->validate([
+            'emoji' => 'required|string',
+        ]);
+
+        $userId = auth()->user()->id;
+        $emoji = $request->input('emoji');
+
+        $existingReaction = MessageReaction::where('message_id', $message->id)
+            ->where('user_id', $userId)
+            ->where('emoji', $emoji)
+            ->first();
+
+        if ($existingReaction) {
+            // Если реакция существует — удаляем её (дизлайк)
+            $existingReaction->delete();
+            $action = 'removed';
+        } else {
+            // Если реакции нет — создаем новую
+            MessageReaction::create([
+                'message_id' => $message->id,
+                'user_id' => $userId,
+                'emoji' => $emoji,
+            ]);
+            $action = 'added';
+        }
+
+        // Возвращаем обновленный список ВСЕХ реакций для этого сообщения
+        // чтобы фронтенд мог синхронизировать состояние интерфейса
+        $updatedReactions = $message->reactions()->get();
+
+        return response()->json([
+            'status' => 'success',
+            'action' => $action,
+            'reactions' => $updatedReactions
+        ]);
     }
 }
