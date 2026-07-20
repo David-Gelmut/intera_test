@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Events\MessageDeleted;
+use App\Events\MessageReactionToggle;
 use App\Events\MessageSent;
 use App\Events\MessageUpdated;
+use App\Events\ChatReadBroadcast;
 use App\Http\Controllers\Controller;
 use App\Jobs\CheckUnreadMessageJob;
 use App\Models\Message;
@@ -121,18 +123,21 @@ class MessageController extends Controller
     /**
      * Пометить все входящие сообщения в чате как прочитанные.
      */
-    public function markAsRead(Request $request, $chatId): JsonResponse
+    public function markAsRead(Request $request, int $chatId): JsonResponse
     {
         $hasAccess = $request->user()->chats()->where('chat_id', $chatId)->exists();
         if (!$hasAccess) return response()->json(['message' => 'Доступ запрещен.'], 403);
 
-        // Проставляем текущее время всем чужим непрочитанным сообщениям в этом чате
+        // Находим все непрочитанные сообщения в этом чате, которые написали НЕ мы
         Message::where('chat_id', $chatId)
             ->where('user_id', '!=', $request->user()->id)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        return response()->json(['success' => true]);
+        // Пушим в Reverb событие прочтения чата для собеседника
+        broadcast(new ChatReadBroadcast($chatId, $request->user()->id))->toOthers();
+
+        return response()->json(['status' => 'success', 'read_at' => now()]);
     }
 
     // 1. РЕДАКТИРОВАНИЕ СООБЩЕНИЯ
@@ -219,6 +224,8 @@ class MessageController extends Controller
         // Возвращаем обновленный список ВСЕХ реакций для этого сообщения
         // чтобы фронтенд мог синхронизировать состояние интерфейса
         $updatedReactions = $message->reactions()->get();
+
+        broadcast(new MessageReactionToggle($message))->toOthers();
 
         return response()->json([
             'status' => 'success',

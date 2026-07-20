@@ -412,8 +412,7 @@
                 <div class="flex justify-around p-1.5 border-b border-slate-100 md:border-b-0 md:border-r border-slate-100 text-base gap-1.5 relative">
                   <button v-for="emoji in quickEmojis" :key="emoji" @click.stop="addReaction(msg.id, emoji)" class="hover:scale-125 transition-transform cursor-pointer">{{ emoji }}</button>
                   <button @click="toggleExtendedEmojis($event, msg.id)" type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Все реакции">➕</button>
-
-                
+        
                   <div 
                     v-if="activeEmojiPickerId === msg.id"
                     @click.stop
@@ -427,32 +426,10 @@
           
                 </div>
 
-
-
-
-
-                <!-- Кнопка: Ответить -->
-                <!--button 
-                  @click.stop="replyMessage(msg)" 
-                  type="button" 
-                  class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" 
-                  title="Ответить"
-                >
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                  </svg>
-                  <span class="md:hidden text-slate-600 font-medium">Ответить</span>
-                </button-->
-
-
-
                 <button @click.stop="replyMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Ответить">
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                   <span class="md:hidden text-slate-600 font-medium">Ответить</span>
                 </button>
-
-
-
 
                 <!-- Кнопка: Копировать текст -->
                 <button 
@@ -597,7 +574,6 @@
 
             </div>
 
-
             <!-- Основная строка управления (Кнопки и Инпут) -->
             <div class="flex items-center gap-2 md:gap-3">
 
@@ -624,12 +600,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
-
-          
-             
-
-
-
+              
               <!-- Поле ввода текста -->
               <input
                   v-model="newMessageText"
@@ -1020,10 +991,6 @@ const cancelReply = () => {
   replyingMessage.value = null
 }
 
-
-
-
-
 // 4. Переслать сообщение
 const forwardMessage = (msg) => {
   console.log('Переслать сообщение:', msg)
@@ -1049,6 +1016,8 @@ const selectChat = async (id, user = null) => {
   scrollToBottom();
 
   window.Echo.private(`chat.${id}`)
+
+
       // 1. Слушаем отправку НОВЫХ сообщений
       .listen('MessageSent', (e) => {
         // Обновляем превью последнего сообщения в списке чатов слева
@@ -1091,25 +1060,52 @@ const selectChat = async (id, user = null) => {
       .listen('MessageDeleted', (e) => {
         // Мгновенно стираем удаленное облачко с экрана
         chatStore.messages = chatStore.messages.filter(m => m.id !== e.messageId);
-
-        // Если удалили последнее сообщение — запрашиваем список чатов заново для обновления превью
-        const targetChat = chatStore.chatList.find(c => c.id === id);
-        if (targetChat && targetChat.last_message?.id === e.messageId) {
-          // Чтобы не писать сложную логику поиска предыдущего сообщения, просто обновляем список
-          chatStore.getChatList();
+        console.log(chatStore.messages)
+        
+        if(chatStore.messages.length ===0){
+            chatStore.fetchChats();
+            console.log(chatStore.chatList) ;
         }
+
+    
+        // Если удалили последнее сообщение — запрашиваем список чатов заново для обновления превью
+        // const targetChat = chatStore.chatList.find(c => c.id === id);
+        // if (targetChat && targetChat.last_message?.id === e.messageId) {
+          // Чтобы не писать сложную логику поиска предыдущего сообщения, просто обновляем список
+        //  chatStore.getChatList();
+        //}
+      })
+      
+      .listen('MessageReactionToggle', (e) => {
+      
+        // Ищем, в каком сообщении изменились реакции
+        const msg = chatStore.messages.find(m => Number(m.id) === Number(e.message_id))
+        
+        if (msg) {
+          // Мгновенно обновляем локальный массив реакций в реальном времени
+          msg.reactions = e.reactions
+        }
+
+      })
+      
+      .listen('ChatReadBroadcast', (e) => {
+      
+        // Собеседник прочитал чат. Значит, ВСЕ НАШИ сообщения в этом чате теперь прочитаны.
+        // Пробегаемся по локальному массиву сообщений и проставляем read_at
+        chatStore.messages.forEach(msg => {
+          if (isMyMessage(msg.user_id) && !msg.read_at) {
+            msg.read_at = e.read_at; // Устанавливаем время прочтения
+          }
+        });
+
+        // Также обнуляем счетчик непрочитанных для этого чата в списке слева (на всякий случай)
+        const targetChat = chatStore.chatList.find(c => c.id === id);
+        if (targetChat) {
+          targetChat.unread_count = 0;
+        }
+
       });
-
-/*  window.Echo.private(`chat.${id}`)
-      .listen('MessageSent', (e) => {
-
-        if (!chatStore.messages.some(m => m.id === e.id)) {
-           chatStore.messages.push(e.message);
-         }
-        chatStore.messages.push(e);
-        scrollToBottom();
-        chatStore.readChatMessages(id);
-      });*/
+           
 };
 
 
@@ -1212,6 +1208,11 @@ async function deleteMessage(messageId) {
     await axios.delete(`/api/messages/${messageId}`);
     // Удаляем локально с экрана
     chatStore.messages = chatStore.messages.filter(m => m.id !== messageId);
+
+    if(chatStore.messages.length === 0){
+        chatStore.fetchChats();    
+    }
+
   } catch (error) {
     console.error('Не удалось удалить сообщение:', error);
   }
@@ -1271,6 +1272,8 @@ const sendMessage = async () => {
 // Сбрасываем плашку ответа на фронтенде, чтобы следующий ввод был обычным сообщением
   replyingMessage.value = null;
 
+  chatStore.fetchChats();
+
   scrollToBottom();
 };
 
@@ -1326,78 +1329,5 @@ watch(
     { deep: true } // deep нужен, так как мы следим за изменениями внутри массива
 );
 
-
-
-//ЛОГИКА ДЛЯ СИТУАЦИИ КОГДА СОКЕТЫ ОТВАЛИЛИСЬ
-// Переменная для хранения таймера опроса БД
-let fallbackPollingInterval = null;
-
-// Слушаем встроенные статусы подключения Pusher/Reverb
-window.Echo.connector.pusher.connection.bind('state_change', (states) => {
-  /*
-    Доступные статусы:
-    'connecting' (подключение), 'connected' (подключено),
-    'unavailable' (недоступен), 'failed' (ошибка), 'disconnected' (отключен)
-  */
-  console.log('Статус сокета изменился:', states.current);
-
-  if (states.current === 'connected') {
-    // 1. Если сокет ожил или переподключился — выключаем аварийный опрос БД
-    if (fallbackPollingInterval) {
-      clearInterval(fallbackPollingInterval);
-      fallbackPollingInterval = null;
-    }
-    // Дозагружаем сообщения, которые могли пропустить, пока сокет лежал
-    syncMissedMessages();
-
-  } else if (states.current === 'unavailable' || states.current === 'disconnected') {
-    // 2. Если контейнер сокетов упал — включаем аварийный режим опроса БД
-    if (!fallbackPollingInterval) {
-      startFallbackPolling();
-    }
-  }
-});
-
-// Функция аварийного опроса (работает, пока лежит контейнер сокетов)
-function startFallbackPolling() {
-  console.warn('Сокеты недоступны. Включен режим аварийного опроса БД...');
-
-  fallbackPollingInterval = setInterval(() => {
-    // Опрашиваем базу, только если у нас открыт какой-то конкретный чат
-    if (chatStore.activeChatId) {
-      syncMissedMessages();
-    }
-  }, 5000); // Опрос каждые 5 секунд
-}
-
-// Функция, которая забирает из БД новые сообщения
-async function syncMissedMessages() {
-  if (!chatStore.messages.length || !chatStore.activeChatId) return;
-
-  // Берем ID самого последнего сообщения, которое сейчас отображено на экране
-  const lastMessageId = chatStore.messages[chatStore.messages.length - 1].id;
-
-  try {
-    // Делаем обычный HTTP-запрос к бэкенду
-    const response = await axios.get(`/api/chats/${chatStore.activeChatId}/sync?last_id=${lastMessageId}`);
-    //TODO  проверить условие !chatStore.messages.some(m => m.id === msg.id)
-    if (response.data && response.data.length > 0) {
-      response.data.forEach(msg => {
-
-        //if (!chatStore.messages.some(m => m.id === msg.id)) {
-          chatStore.messages.push(msg);
-        //  }
-      });
-    }
-  } catch (error) {
-    console.error('Не удалось синхронизировать сообщения с БД:', error);
-  }
-}
-
-
-
-
 </script>
-<style>
 
-</style>

@@ -10,14 +10,14 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageDeleted implements ShouldBroadcastNow
+class ChatReadBroadcast implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(public int $chatId, public int $messageId)
+    public function __construct(public int $chatId,public int $userId)
     {
         //
     }
@@ -31,6 +31,15 @@ class MessageDeleted implements ShouldBroadcastNow
     {
         return [
             new PrivateChannel('chat.' . $this->chatId),
+        ];
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'chat_id' => $this->chatId,
+            'user_id' => $this->userId, // ID того, кто прочитал
+            'read_at' => now()->toIso8601String() // Время прочтения
         ];
     }
 }

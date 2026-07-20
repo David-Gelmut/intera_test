@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -10,14 +11,14 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageDeleted implements ShouldBroadcastNow
+class MessageReactionToggle  implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(public int $chatId, public int $messageId)
+    public function __construct(public Message $message)
     {
         //
     }
@@ -30,7 +31,17 @@ class MessageDeleted implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('chat.' . $this->chatId),
+            new PrivateChannel('chat.' . $this->message->chat_id)
         ];
     }
+
+    public function broadcastWith(): array
+    {
+        return [
+
+            'message_id' => $this->message->id,
+            'reactions' => $this->message->reactions->toArray()
+
+        ];
+    } 
 }
