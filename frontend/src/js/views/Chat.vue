@@ -116,11 +116,10 @@
               </template>
             </p>
 
-<!--            <p class="text-xs text-slate-500 truncate mt-0.5">Нажмите, чтобы открыть переписку...</p>-->
+            <!--<p class="text-xs text-slate-500 truncate mt-0.5">Нажмите, чтобы открыть переписку...</p>-->
           </div>
 
         </div>
-
       </div>
 
       <!-- СПИСОК 2: Все пользователи системы (Контакты) -->
@@ -162,7 +161,6 @@
           </span>
         </button>
       </div>
-
     </div>
 
 
@@ -204,7 +202,7 @@
               <span class="font-bold text-sm text-slate-800">
                 {{chatStore.activeInterlocutor ? chatStore.activeInterlocutor.name : 'Чат'}}
               </span>
-              <!--              <span class="text-[11px] text-emerald-600 font-medium">Онлайн-трансляция сообщений</span>-->
+              <!-- <span class="text-[11px] text-emerald-600 font-medium">Онлайн-трансляция сообщений</span>-->
             </div>
           </div>
 
@@ -225,17 +223,16 @@
               Удалить
             </button>
           </div>
-
         </div>
 
         <!-- Лента сообщений -->
-        <div ref="messageContainer" class="flex-1 flex flex-col  p-4 md:p-6 overflow-y-auto space-y-4">
+        <div ref="messageContainer" class="flex-1 flex flex-col-reverse gap-4 p-4 md:p-6 overflow-y-auto">
 
-          <div class="flex-1"></div>
+          <!--<div class="flex-1"></div>-->
 
           <div
               @click="handleMessageClick($event, msg)"
-              v-for="(msg, index) in chatStore.messages"
+              v-for="(msg, index) in reversedMessages"
               :id="`msg-${msg.id}`"
               :key="msg.id"
               class="flex flex-col max-w-[85%] md:max-w-[70%] group transition-transform duration-300"
@@ -256,8 +253,8 @@
               <div
                   class="px-4 py-2 text-sm shadow-2xs leading-relaxed break-words w-fit max-w-full relative"
                   :class="isMyMessage(msg.user_id)
-                  ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-4 pb-5'
-                  : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-4 pb-5'"
+                  ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-4 pb-4'
+                  : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-4 pb-4'"
               >
                
                 <!-- ================= БЛОК ЦИТАТЫ ВНУТРИ ОБЛАЧКА ================= -->
@@ -341,7 +338,7 @@
                 </div>
 
                 <!-- СЛУЖЕБНЫЙ БЛОК: Время, Изменено, Галочки (Позиционируется абсолютно внизу справа облачка) -->
-                <div class="absolute bottom-1 right-2.5 flex items-center gap-1 text-[10px]" :class="isMyMessage(msg.user_id) ? 'text-indigo-200' : 'text-slate-400'">
+                <div class="flex right-2.5 justify-end gap-1 text-[10px]" :class="isMyMessage(msg.user_id) ? 'text-indigo-200' : 'text-slate-400'">
 
                   <!-- Метка "изм." -->
                   <span v-if="isEdited(msg)" class="font-medium italic opacity-80">изм.</span>
@@ -360,7 +357,6 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-
                 </div>
 
                 <!-- ================= БЛОК СЧЕТЧИКОВ РЕАКЦИЙ ПОД СООБЩЕНИЕМ ================= -->
@@ -385,7 +381,7 @@
                     <span>{{ group.emoji }}</span>
                     
                     <!-- Количество (показываем, только если больше 1, чтобы интерфейс был чище) -->
-                    <!--span v-if="group.count > 0" class="text-[10px]">{{ group.count }}</span-->
+                    <span v-if="group.count > 0" class="text-[10px]">{{ group.count }}</span>
                   </button>
                 </div>
 
@@ -727,6 +723,7 @@ import {ref, onMounted, onUnmounted, nextTick, watch} from 'vue';
 import {useAuthStore} from '../store/auth.js';
 import {useChatStore} from '../store/chat.js';
 import EmojiPicker from 'vue3-emoji-picker';
+import { computed } from 'vue'
 
 const authStore = useAuthStore();
 const chatStore = useChatStore();
@@ -748,6 +745,11 @@ const isMyMessage = (id) => id === currentUserId;
 const BACKEND_URL = axios.defaults.baseURL;
 // Хранит ID сообщения, на которое нажали на мобилке
 const activeMessageId = ref(null)
+
+
+const reversedMessages = computed(() => {
+  return chatStore.messages ? [...chatStore.messages].reverse() : [];
+});
 
 const scrollToMessage = (parentId) => {
   if (!parentId) return
