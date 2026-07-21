@@ -226,13 +226,14 @@
         </div>
 
         <!-- Лента сообщений -->
-        <div ref="messageContainer" class="flex-1 flex flex-col-reverse gap-4 p-4 md:p-6 overflow-y-auto">
+        <div ref="messageContainer" class="flex-1 flex flex-col gap-4 p-4 md:p-6 overflow-y-auto">
 
+          <div class="flex-1 min-h-0"></div>
           <!--<div class="flex-1"></div>-->
 
           <div
               @click="handleMessageClick($event, msg)"
-              v-for="(msg, index) in reversedMessages"
+              v-for="(msg, index) in chatStore.messages"
               :id="`msg-${msg.id}`"
               :key="msg.id"
               class="flex flex-col max-w-[85%] md:max-w-[70%] group transition-transform duration-300"
@@ -748,7 +749,15 @@ const activeMessageId = ref(null)
 
 
 const reversedMessages = computed(() => {
-  return chatStore.messages ? [...chatStore.messages].reverse() : [];
+  if (!chatStore.messages || chatStore.messages.length === 0) return [];
+
+  // 1. Копируем массив, чтобы не испортить оригинал
+  return [...chatStore.messages]
+      // 2. Сортируем строго по возрастанию ID (от старых к новым)
+      // Если у вас сообщения сортируются по времени, используйте: new Date(a.created_at) - new Date(b.created_at)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      // 3. Переворачиваем для flex-col-reverse (свежие будут вверху массива в DOM)
+      .reverse();
 });
 
 const scrollToMessage = (parentId) => {
