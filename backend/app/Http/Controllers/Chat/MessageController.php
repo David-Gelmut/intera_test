@@ -26,7 +26,7 @@ class MessageController extends Controller
         // Проверяем, состоит ли текущий залогиненный пользователь в этом чате
         $hasAccess = $request->user()->chats()->where('chat_id', $chatId)->exists();
 
-        if (! $hasAccess) {
+        if (!$hasAccess) {
             return response()->json([
                 'message' => 'У вас нет доступа к переписке в этом диалоге.'
             ], 403);
@@ -50,7 +50,7 @@ class MessageController extends Controller
                     // Если сообщение старое или не зашифровано, оставляем как есть
                 }
             }
-                  if ($msg->parent) {
+            if ($msg->parent) {
                 try {
                     $msg->parent->text = Crypt::decryptString($msg->parent->text);
                 } catch (\Exception $e) {
@@ -61,11 +61,11 @@ class MessageController extends Controller
             return $msg;
         });
 
-
+        $cursorPageUrl = config('app.env') === 'production' ? str_replace('http', 'https', $messages->nextPageUrl()) : $messages->nextPageUrl();
 
         return response()->json([
             'data' => array_reverse($messages->items()),
-            'next_page_url' => $messages->nextPageUrl(), // Ссылка на следующую (более старую) порцию
+            'next_page_url' => $cursorPageUrl,
         ]);
     }
 
@@ -75,15 +75,15 @@ class MessageController extends Controller
     public function sendMessage(Request $request, int $chatId): JsonResponse
     {
         $request->validate([
-            'parent_id'=>'nullable|exists:messages,id',
+            'parent_id' => 'nullable|exists:messages,id',
             'text' => 'nullable|string|max:5000',
-            'files'   => 'nullable|array',
+            'files' => 'nullable|array',
             'files.*' => 'file|max:102400', // 100MB
         ]);
 
         $hasAccess = $request->user()->chats()->where('chat_id', $chatId)->exists();
 
-        if (! $hasAccess) {
+        if (!$hasAccess) {
             return response()->json([
                 'message' => 'Вы не являетесь участником этого чата и не можете отправлять сообщения.'
             ], 403);
@@ -92,9 +92,9 @@ class MessageController extends Controller
         $message = Message::create([
             'parent_id' => $request->parent_id,
             'chat_id' => $chatId,
-           // 'user_id' => auth()->id(),
+            // 'user_id' => auth()->id(),
             'user_id' => $request->user()->id,
-            'text'    => $request->text ? Crypt::encryptString($request->text) : null,
+            'text' => $request->text ? Crypt::encryptString($request->text) : null,
         ]);
 
 
@@ -118,12 +118,12 @@ class MessageController extends Controller
                     'file_name' => $file->getClientOriginalName(),
                     'file_type' => $fileType,
                     'file_size' => $file->getSize(),
-                    'driver'    => 'local',
+                    'driver' => 'local',
                 ]);
             }
         }
 
-        $message->load('user:id,name','attachments');
+        $message->load('user:id,name', 'attachments');
 
         if ($message->text) {
             $message->text = Crypt::decryptString($message->text);
@@ -196,7 +196,7 @@ class MessageController extends Controller
         // Удаляем прикрепленные файлы из MinIO/Public
         foreach ($message->attachments as $file) {
             Storage::disk('public')
-                ->delete(str_replace( config('app.url') . '/storage/', '', $file->file_path));
+                ->delete(str_replace(config('app.url') . '/storage/', '', $file->file_path));
         }
 
         // Удаляем из базы
