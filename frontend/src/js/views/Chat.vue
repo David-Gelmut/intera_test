@@ -1395,9 +1395,10 @@ const sendMessage = async () => {
 
   const message = await chatStore.sendMessageAction(chatStore.activeChatId, formData);
 
-/*  if (!chatStore.messages.some(m => m.id === message.id)) {
+  if (!chatStore.messages.some(m => m.id === message.id)) {
     chatStore.messages.push(message);
-  }*/
+    chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
+  }
 
   newMessageText.value = '';
   selectedFiles.value = [];

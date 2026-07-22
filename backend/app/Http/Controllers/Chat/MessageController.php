@@ -123,11 +123,20 @@ class MessageController extends Controller
             }
         }
 
-        $message->load('user:id,name', 'attachments');
+        $message->load('user:id,name', 'attachments', 'parent','parent.user');
 
         if ($message->text) {
             $message->text = Crypt::decryptString($message->text);
         }
+
+        if ($message->parent) {
+            try {
+                $message->parent->text = Crypt::decryptString($message->parent->text);
+            } catch (\Exception $e) {
+                // Если сообщение старое или не зашифровано, оставляем как есть
+            }
+        }
+
 
         broadcast(new MessageSent($message))->toOthers();
 
