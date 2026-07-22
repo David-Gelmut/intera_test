@@ -53,6 +53,8 @@ Route::middleware(['auth:sanctum', 'verified', 'check.status'])->group(function 
 
     Route::post('/messages/{message}/reactions', [MessageController::class, 'toggleReaction']);
 
+    Route::get('/chats/{chatId}/context/{messageId}', [MessageController::class, 'getContextMessage']);
+
 });
 
 //Route::middleware('auth:sanctum')->group(function () {

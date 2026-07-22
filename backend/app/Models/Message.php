@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Message extends Model
 {
-    protected $fillable = ['chat_id', 'user_id', 'text','parent_id'];
+    protected $fillable = ['chat_id', 'user_id', 'text', 'parent_id'];
 
     protected $casts = [
-       // 'text' => 'encrypted',
+        // 'text' => 'encrypted',
     ];
 
     public function user(): BelongsTo
@@ -28,9 +28,15 @@ class Message extends Model
     {
         return $this->hasMany(Attachment::class);
     }
-    
-    public function reactions()
+
+    public function reactions(): HasMany
     {
         return $this->hasMany(MessageReaction::class);
     }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'parent_id')->select(['id', 'text', 'user_id']);
+    }
+
 }

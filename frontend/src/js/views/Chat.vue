@@ -226,177 +226,198 @@
         </div>
 
         <!-- Лента сообщений -->
-        <div ref="messageContainer" class="flex-1 flex flex-col gap-4 p-4 md:p-6 overflow-y-auto">
+        <div
+            ref="messageContainer"
+            @scroll="handleScroll"
+            :class="[
+                'flex-1 flex flex-col gap-4 p-4 md:p-6 overflow-y-auto',
+                isContextLoading ? 'opacity-30 pointer-events-none' : 'opacity-100'
+                ]">
+
+          <!-- Индикатор загрузки старых сообщений сверху -->
+          <div v-if="isLoading" class="text-center text-xs text-gray-400 py-2">
+            Загрузка истории...
+          </div>
 
           <div class="flex-1 min-h-0"></div>
           <!--<div class="flex-1"></div>-->
 
-          <div
-              @click="handleMessageClick($event, msg)"
-              v-for="(msg, index) in chatStore.messages"
-              :id="`msg-${msg.id}`"
-              :key="msg.id"
-              class="flex flex-col max-w-[85%] md:max-w-[70%] group transition-transform duration-300"
-              :class="[
+          <div v-for="(dayMessages, date) in  chatStore.groupsMessages" :key="date" class="flex flex-col gap-4">
+
+              <!-- Красивая плашка даты посередине экрана -->
+              <div class="flex justify-center my-2">
+                <span class="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
+                  {{ date }}
+                </span>
+              </div>
+
+            <div
+                v-for="(msg, index) in dayMessages"
+                :id="`msg-${msg.id}`"
+                :key="msg.id"
+                @click="handleMessageClick($event, msg)"
+                class="flex flex-col max-w-[85%] md:max-w-[70%] group transition-transform duration-300"
+                :class="[
                 isMyMessage(msg.user_id) ? 'ml-auto items-end' : 'items-start',
-                index === 0 ? 'mt-auto' : ''
+                index === 0 ? 'mt-auto' : '',
+                highlightedMessageId === msg.id ? 'animate-pulse-highlight' : ''
               ]"
-          >
-            <!-- Имя отправителя (для чужих) -->
-            <span v-if="!isMyMessage(msg.user_id)" class="text-xs text-slate-400 font-medium ml-2 mb-1">
-              {{ msg.user?.name }}
-            </span>
+            >
+              <!-- Имя отправителя (для чужих) -->
+              <span v-if="!isMyMessage(msg.user_id)" class="text-xs text-slate-400 font-medium ml-2 mb-1">
+                {{ msg.user?.name }}
+              </span>
 
-            <!-- Контейнер: Облачко + Кнопки действий-->     
-            <div class="message-bubble flex items-center gap-2 max-w-full relative transition-all" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
+              <!-- Контейнер: Облачко + Кнопки действий-->
+              <div class="message-bubble flex items-center gap-2 max-w-full relative transition-all" :class="isMyMessage(msg.user_id) ? 'flex-row-reverse' : 'flex-row'">
 
-              <!-- Облачко сообщения -->
-              <div
-                  class="px-4 py-2 text-sm shadow-2xs leading-relaxed break-words w-fit max-w-full relative"
-                  :class="isMyMessage(msg.user_id)
+                <!-- Облачко сообщения -->
+                <div
+                    class="px-4 py-2 text-sm shadow-2xs leading-relaxed break-words w-fit max-w-full relative"
+                    :class="isMyMessage(msg.user_id)
                   ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none pl-4 pr-4 pb-4'
                   : 'bg-white text-slate-800 border border-slate-100 rounded-2xl rounded-bl-none pl-4 pr-4 pb-4'"
-              >
-               
-                <!-- ================= БЛОК ЦИТАТЫ ВНУТРИ ОБЛАЧКА ================= -->
-                <!-- Если у сообщения есть parent_id, выводим плашку-ссылку -->
-                <div 
-                  v-if="msg.parent_id"
-                  @click.stop="scrollToMessage(msg.parent_id)"
-                  class="mb-1.5 p-2 rounded-lg text-xs border-l-2 bg-black/5 cursor-pointer hover:bg-black/10 transition-colors flex flex-col min-w-[120px] max-w-full"
-                  :class="isMyMessage(msg.user_id) ? 'border-white/60 text-indigo-100' : 'border-indigo-500 text-slate-500'"
                 >
-                  <span class="font-semibold" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-indigo-600'">
-                    {{ getParentMessageAuthor(msg.parent_id) }}
-                  </span>
-                  <span class="truncate opacity-90">
-                    {{ getParentMessageText(msg.parent_id) }}
-                  </span>
-                </div>             
-                
-                <!-- Вывод текста -->
-                <span v-if="msg.text" class="block whitespace-pre-wrap">{{ msg.text }}</span>
 
-                <!-- Вывод вложений (attachments) -->
-                <div v-if="msg.attachments && msg.attachments.length > 0" class="space-y-2 mt-2">
-                  <div v-if="msg.attachments && msg.attachments.length > 0" v-viewer class="space-y-2 mt-2">
-                    <div v-for="file in msg.attachments" :key="file.id">
-                      <!-- Если файл — КАРТИНКА -->
-                      <div v-if="file.file_type === 'image'" class="max-w-xs">
-                        <!-- УБРАЛИ @click, плагин сам обработает нажатие -->
-                        <img
-                            :src="getFileUrl(file.file_path)"
-                            alt="Изображение"
-                            class="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity border border-slate-100/50"
-                        />
-                      </div>
-                      <!-- Если файл — ВИДЕО -->
-                      <div v-else-if="file.file_type === 'video'" class="max-w-xs sm:max-w-sm my-1 relative group">
-                        <video
-                            :src="getFileUrl(file.file_path)"
-                            controls
-                            playsinline
-                            preload="metadata"
-                            class="rounded-xl max-h-64 w-full object-contain bg-black border border-slate-100/10 shadow-sm"
-                        >
-                          Ваш браузер не поддерживает воспроизведение видео.
-                        </video>
+                  <!-- ================= БЛОК ЦИТАТЫ ВНУТРИ ОБЛАЧКА ================= -->
+                  <!-- Если у сообщения есть parent_id, выводим плашку-ссылку -->
+                  <div
+                      v-if="msg.parent"
+                      @click="scrollToMessage(msg.parent.id)"
+                      class="mb-1.5 p-2 rounded-lg text-xs border-l-2 bg-black/5 cursor-pointer hover:bg-black/10 transition-colors flex flex-col min-w-[120px] max-w-full"
+                      :class="isMyMessage(msg.user_id) ? 'border-white/60 text-indigo-100' : 'border-indigo-500 text-slate-500'"
+                  >
+                    <span class="font-semibold" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-indigo-600'">
+                      {{ msg.parent.user.name}}
+                    </span>
+                      <span class="truncate opacity-90">
+                        {{msg.parent.text}}
+                    </span>
+                  </div>
 
-                        <!-- Кнопка развертывания, которая появляется при наведении на видео -->
-                        <button
-                            type="button"
-                            @click="openVideoModal(getFileUrl(file.file_path))"
-                            class="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/80"
-                            title="Развернуть на весь экран"
-                        >
-                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0l-6-6" />
+                  <!-- Вывод текста -->
+                  <span v-if="msg.text" class="block whitespace-pre-wrap">{{ msg.text }}</span>
+
+                  <!-- Вывод вложений (attachments) -->
+                  <div v-if="msg.attachments && msg.attachments.length > 0" class="space-y-2 mt-2">
+                    <div v-if="msg.attachments && msg.attachments.length > 0" v-viewer class="space-y-2 mt-2">
+                      <div v-for="file in msg.attachments" :key="file.id">
+                        <!-- Если файл — КАРТИНКА -->
+                        <div v-if="file.file_type === 'image'" class="max-w-xs">
+                          <!-- УБРАЛИ @click, плагин сам обработает нажатие -->
+                          <img
+                              :src="getFileUrl(file.file_path)"
+                              alt="Изображение"
+                              class="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:opacity-90 transition-opacity border border-slate-100/50"
+                          />
+                        </div>
+                        <!-- Если файл — ВИДЕО -->
+                        <div v-else-if="file.file_type === 'video'" class="max-w-xs sm:max-w-sm my-1 relative group">
+                          <video
+                              :src="getFileUrl(file.file_path)"
+                              controls
+                              playsinline
+                              preload="metadata"
+                              class="rounded-xl max-h-64 w-full object-contain bg-black border border-slate-100/10 shadow-sm"
+                          >
+                            Ваш браузер не поддерживает воспроизведение видео.
+                          </video>
+
+                          <!-- Кнопка развертывания, которая появляется при наведении на видео -->
+                          <button
+                              type="button"
+                              @click="openVideoModal(getFileUrl(file.file_path))"
+                              class="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/80"
+                              title="Развернуть на весь экран"
+                          >
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0l-6-6" />
+                            </svg>
+                          </button>
+                        </div>
+                        <!-- Если файл — ДОКУМЕНТ -->
+                        <div v-else class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-black/5 max-w-xs">
+                          <svg class="h-7 w-7 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                           </svg>
-                        </button>
-                      </div>
-                      <!-- Если файл — ДОКУМЕНТ -->
-                      <div v-else class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-black/5 max-w-xs">
-                        <svg class="h-7 w-7 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <div class="flex flex-col min-w-0 flex-1">
+                          <div class="flex flex-col min-w-0 flex-1">
                       <span class="font-medium text-xs truncate" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-slate-800'">
                         {{ file.file_name }}
                       </span>
-                          <a
-                              target="_blank"
-                              download="true"
-                              :href="getFileUrl(file.file_path)"
-                              class="text-[10px] underline font-semibold mt-0.5 text-left cursor-pointer transition-colors"
-                              :class="isMyMessage(msg.user_id) ? 'text-indigo-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-800'"
-                          >
-                            Скачать
-                          </a>
+                            <a
+                                target="_blank"
+                                download="true"
+                                :href="getFileUrl(file.file_path)"
+                                class="text-[10px] underline font-semibold mt-0.5 text-left cursor-pointer transition-colors"
+                                :class="isMyMessage(msg.user_id) ? 'text-indigo-200 hover:text-white' : 'text-indigo-600 hover:text-indigo-800'"
+                            >
+                              Скачать
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- СЛУЖЕБНЫЙ БЛОК: Время, Изменено, Галочки (Позиционируется абсолютно внизу справа облачка) -->
-                <div class="flex right-2.5 justify-end gap-1 text-[10px]" :class="isMyMessage(msg.user_id) ? 'text-indigo-200' : 'text-slate-400'">
+                  <!-- СЛУЖЕБНЫЙ БЛОК: Время, Изменено, Галочки (Позиционируется абсолютно внизу справа облачка) -->
+                  <div class="flex right-2.5 justify-end gap-1 text-[10px]" :class="isMyMessage(msg.user_id) ? 'text-indigo-200' : 'text-slate-400'">
 
-                  <!-- Метка "изм." -->
-                  <span v-if="isEdited(msg)" class="font-medium italic opacity-80">изм.</span>
+                    <!-- Метка "изм." -->
+                    <span v-if="isEdited(msg)" class="font-medium italic opacity-80">изм.</span>
 
-                  <!-- Время отправки -->
-                  <span>{{ formatTime(msg.created_at) }}</span>
+                    <!-- Время отправки -->
+                    <span>{{ formatTime(msg.created_at) }}</span>
 
-                  <!-- ГАЛОЧКИ ДОСТАВКИ (Только для наших сообщений) -->
-                  <div v-if="isMyMessage(msg.user_id)" class="ml-0.5 shrink-0">
-                    <!-- Две галочки (Прочитано) -->
-                    <svg v-if="msg.read_at" class="h-3.5 w-3.5 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7M5 18l4 4L19 12" />
-                    </svg>
-                    <!-- Одна галочка (Доставлено) -->
-                    <svg v-else class="h-3.5 w-3.5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <!-- ГАЛОЧКИ ДОСТАВКИ (Только для наших сообщений) -->
+                    <div v-if="isMyMessage(msg.user_id)" class="ml-0.5 shrink-0">
+                      <!-- Две галочки (Прочитано) -->
+                      <svg v-if="msg.read_at" class="h-3.5 w-3.5 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7M5 18l4 4L19 12" />
+                      </svg>
+                      <!-- Одна галочка (Доставлено) -->
+                      <svg v-else class="h-3.5 w-3.5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                   </div>
-                </div>
 
-                <!-- ================= БЛОК СЧЕТЧИКОВ РЕАКЦИЙ ПОД СООБЩЕНИЕМ ================= -->
-                <div 
-                  v-if="msg.reactions && msg.reactions.length > 0" 
-                  class="flex flex-wrap gap-1 mt-1 max-w-full"
-                  :class="isMyMessage(msg.user_id) ? 'justify-end' : 'justify-start'"
-                >
-                  <button
-                    v-for="group in msg.reactions"
-                    :key="group.emoji"
-                    @click.stop="addReaction(msg.id, group.emoji)"
-                    type="button"
-                    class="flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full border transition-all cursor-pointer select-none active:scale-95"
-                    :class="[
-                      group.isMy 
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-600 font-medium shadow-2xs' 
+                  <!-- ================= БЛОК СЧЕТЧИКОВ РЕАКЦИЙ ПОД СООБЩЕНИЕМ ================= -->
+                  <div
+                      v-if="msg.reactions && msg.reactions.length > 0"
+                      class="flex flex-wrap gap-1 mt-1 max-w-full"
+                      :class="isMyMessage(msg.user_id) ? 'justify-end' : 'justify-start'"
+                  >
+                    <button
+                        v-for="group in msg.reactions"
+                        :key="group.emoji"
+                        @click.stop="addReaction(msg.id, group.emoji)"
+                        type="button"
+                        class="flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full border transition-all cursor-pointer select-none active:scale-95"
+                        :class="[
+                      group.isMy
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-600 font-medium shadow-2xs'
                         : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 hover:bg-slate-50'
                     ]"
-                  >
-                    <!-- Сам эмодзи -->
-                    <span>{{ group.emoji }}</span>
-                    
-                    <!-- Количество (показываем, только если больше 1, чтобы интерфейс был чище) -->
-                    <span v-if="group.count > 0" class="text-[10px]">{{ group.count }}</span>
-                  </button>
+                    >
+                      <!-- Сам эмодзи -->
+                      <span>{{ group.emoji }}</span>
+
+                      <!-- Количество (показываем, только если больше 1, чтобы интерфейс был чище) -->
+                      <span v-if="group.count > 0" class="text-[10px]">{{ group.count }}</span>
+                    </button>
+                  </div>
+
                 </div>
 
-              </div>
-
-              <!-- ================= АДАПТИВНОЕ КОНТЕКСТНОЕ МЕНЮ ДЕЙСТВИЙ ================= -->
-              <div 
-                class="absolute bg-white border border-slate-100 rounded-xl shadow-lg p-1 transition-all duration-150 z-20"
-                :class="[
+                <!-- ================= АДАПТИВНОЕ КОНТЕКСТНОЕ МЕНЮ ДЕЙСТВИЙ ================= -->
+                <div
+                    class="absolute bg-white border border-slate-100 rounded-xl shadow-lg p-1 transition-all duration-150 z-20"
+                    :class="[
                   // Логика отображения по клику (работает везде: и ПК, и Мобилка)
-                  activeMessageId === msg.id 
-                  ? 'opacity-100 visible scale-100' 
+                  activeMessageId === msg.id
+                  ? 'opacity-100 visible scale-100'
                   : 'opacity-0 invisible scale-95',
-                 
+
                   // Выравнивание углов (свои — справа, чужие — слева)
                   isMyMessage(msg.user_id) ? 'right-2 origin-right' : 'left-2 origin-left',
                   // Выравнивание по центру высоты (чтобы не расталкивать сообщения по вертикали)
@@ -404,78 +425,82 @@
                   // Структура: на мобилке вертикальное меню, на ПК (md:) — аккуратный горизонтальный ряд
                   'flex flex-col w-40 md:flex-row md:w-auto md:gap-0.5'
                 ]"
-              >
-                <!-- БЛОК БЫСТРЫХ РЕАКЦИЙ КОНТЕКСТНОЕ МЕНЮ-->
-                <div class="flex justify-around p-1.5 border-b border-slate-100 md:border-b-0 md:border-r border-slate-100 text-base gap-1.5 relative">
-                  <button v-for="emoji in quickEmojis" :key="emoji" @click.stop="addReaction(msg.id, emoji)" class="hover:scale-125 transition-transform cursor-pointer">{{ emoji }}</button>
-                  <button @click="toggleExtendedEmojis($event, msg.id)" type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Все реакции">➕</button>
-        
-                  <div 
-                    v-if="activeEmojiPickerId === msg.id"
-                    @click.stop
-                    class="absolute z-30 shadow-2xl rounded-xl overflow-hidden bg-white border border-slate-100 bottom-full mb-2"
-                    :class="[
+                >
+                  <!-- БЛОК БЫСТРЫХ РЕАКЦИЙ КОНТЕКСТНОЕ МЕНЮ-->
+                  <div class="flex justify-around p-1.5 border-b border-slate-100 md:border-b-0 md:border-r border-slate-100 text-base gap-1.5 relative">
+                    <button v-for="emoji in quickEmojis" :key="emoji" @click.stop="addReaction(msg.id, emoji)" class="hover:scale-125 transition-transform cursor-pointer">{{ emoji }}</button>
+                    <button @click="toggleExtendedEmojis($event, msg.id)" type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Все реакции">➕</button>
+
+                    <div
+                        v-if="activeEmojiPickerId === msg.id"
+                        @click.stop
+                        class="absolute z-30 shadow-2xl rounded-xl overflow-hidden bg-white border border-slate-100 bottom-full mb-2"
+                        :class="[
                       isMyMessage(msg.user_id) ? 'right-0' : 'left-0'
                     ]"
-                  >
-                    <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
-                  </div>
-          
-                </div>
-
-                <button @click.stop="replyMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Ответить">
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                  <span class="md:hidden text-slate-600 font-medium">Ответить</span>
-                </button>
-
-                <!-- Кнопка: Копировать текст -->
-                <button 
-                  @click.stop="copyText(msg.text)" 
-                  type="button" 
-                  class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm"              
-                  title="Копировать"
-                >
-                  <!-- Иконка меняется при успешном копировании -->              
-                  <svg v-if="!isCopied" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="12" height="12" rx="2" stroke-linecap="round" stroke-linejoin="round"></rect>
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-linecap="round" stroke-linejoin="round"></path>
-                  </svg>
-                  <svg v-else class="h-3.5 w-3.5 md:h-3.5 md:w-3.5 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-
-                  <!-- Текст меняется при успешном копировании -->         
-                  <span class="md:hidden md:text-xs text-slate-600 font-medium">{{ isCopied ? 'Скопировано!' : 'Копировать' }}</span>
-                </button>              
-
-
-                <!-- Кнопка: Переслать -->
-                <button @click.stop="forwardMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Переслать">
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                  <span class="md:hidden text-slate-600 font-medium">Переслать</span>
-                </button>
-
-                <!-- ДЕЙСТВИЯ ТОЛЬКО ДЛЯ МОИХ СООБЩЕНИЙ -->
-                <template v-if="isMyMessage(msg.user_id)">
-                  <div class="h-px bg-slate-100 my-1 md:hidden"></div>
-                  
-                  <!-- Редактировать -->
-                  <button @click.stop="startEdit(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Редактировать">
-                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    <span class="md:hidden text-slate-600 font-medium">Изменить</span>
-                  </button>
-                  
-                  <!-- Удалить -->
-                  <button @click.stop="deleteMessage(msg.id)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 cursor-pointer text-xs md:text-sm" title="Удалить для всех">
-                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    <span class="md:hidden text-rose-600 font-medium">Удалить</span>
-                  </button>
-                </template>
-
-                </div>     
+                    >
+                      <EmojiPicker :picker-type="'popup'" :native="true" :theme="'light'" :hide-group-names="true" :disable-skin-tones="true" class="!w-[260px] !h-[300px] !shadow-none !border-none text-sm" @select="onSelectEmoji($event, msg.id)" />
                     </div>
+
                   </div>
+
+                  <button @click.stop="replyMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Ответить">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                    <span class="md:hidden text-slate-600 font-medium">Ответить</span>
+                  </button>
+
+                  <!-- Кнопка: Копировать текст -->
+                  <button
+                      @click.stop="copyText(msg.text)"
+                      type="button"
+                      class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm"
+                      title="Копировать"
+                  >
+                    <!-- Иконка меняется при успешном копировании -->
+                    <svg v-if="!isCopied" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="12" height="12" rx="2" stroke-linecap="round" stroke-linejoin="round"></rect>
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg v-else class="h-3.5 w-3.5 md:h-3.5 md:w-3.5 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+
+                    <!-- Текст меняется при успешном копировании -->
+                    <span class="md:hidden md:text-xs text-slate-600 font-medium">{{ isCopied ? 'Скопировано!' : 'Копировать' }}</span>
+                  </button>
+
+
+                  <!-- Кнопка: Переслать -->
+                  <button @click.stop="forwardMessage(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Переслать">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    <span class="md:hidden text-slate-600 font-medium">Переслать</span>
+                  </button>
+
+                  <!-- ДЕЙСТВИЯ ТОЛЬКО ДЛЯ МОИХ СООБЩЕНИЙ -->
+                  <template v-if="isMyMessage(msg.user_id)">
+                    <div class="h-px bg-slate-100 my-1 md:hidden"></div>
+
+                    <!-- Редактировать -->
+                    <button @click.stop="startEdit(msg)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-slate-50 cursor-pointer text-xs md:text-sm" title="Редактировать">
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      <span class="md:hidden text-slate-600 font-medium">Изменить</span>
+                    </button>
+
+                    <!-- Удалить -->
+                    <button @click.stop="deleteMessage(msg.id)" type="button" class="flex items-center gap-2 p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 cursor-pointer text-xs md:text-sm" title="Удалить для всех">
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <span class="md:hidden text-rose-600 font-medium">Удалить</span>
+                    </button>
+                  </template>
+
+                </div>
               </div>
+
+            </div>
+
+          </div>
+        </div>
+
 
         <!-- Подвал чата: Ввод текста и прикрепление файлов -->
         <div class="p-4 border-t border-slate-200 bg-white shadow-2xs relative">
@@ -740,6 +765,7 @@ const currentModalVideoUrl = ref('');
 const editingMessageId = ref(null);
 let currentUserId = authStore.user?.id || null;
 const isAvatarModalOpen = ref(false);
+const isLoading = ref(false);
 
 const isMyMessage = (id) => id === currentUserId;
 
@@ -747,18 +773,108 @@ const BACKEND_URL = axios.defaults.baseURL;
 // Хранит ID сообщения, на которое нажали на мобилке
 const activeMessageId = ref(null)
 
+const isContextLoading = ref(false);
+const highlightedMessageId = ref(null);
 
-const reversedMessages = computed(() => {
-  if (!chatStore.messages || chatStore.messages.length === 0) return [];
+/*async function jumpToMessage(parentMessageId) {
+  // 1. Проверяем, может сообщение УЖЕ есть на экране?
+  const localElement = document.getElementById(`msg-${parentMessageId}`);
 
-  // 1. Копируем массив, чтобы не испортить оригинал
-  return [...chatStore.messages]
-      // 2. Сортируем строго по возрастанию ID (от старых к новым)
-      // Если у вас сообщения сортируются по времени, используйте: new Date(a.created_at) - new Date(b.created_at)
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      // 3. Переворачиваем для flex-col-reverse (свежие будут вверху массива в DOM)
-      .reverse();
-});
+  if (localElement) {
+    // Если есть, просто плавно скроллим к нему
+    localElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    triggerHighlight(parentMessageId);
+    return;
+  }
+
+  // 2. Если сообщения нет, включаем плавное скрытие контента и запрашиваем контекст
+  isContextLoading.value = true;
+
+  try {
+    const response = await axios.get(`/api/chats/${chatStore.activeChatId}/context/${parentMessageId}`);
+
+    // Заменяем массив сообщений в сторе на новый контекст
+    chatStore.messages = response.data.data;
+    chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
+
+    // Обновляем курсоры (теперь пагинация должна уметь ходить и вверх, и вниз)
+    // nextPageUrl.value = ... (ссылка с prev_cursor)
+
+    // 3. Ждем, пока Vue отрендерит новые зашифрованные сообщения в DOM
+    nextTick(() => {
+      const targetElement = document.getElementById(`msg-${parentMessageId}`);
+      if (targetElement) {
+        // Скроллим ровно по центру экрана
+        targetElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+
+      // Выключаем загрузку (контейнер плавно проявляется уже в нужной позиции скролла)
+      isContextLoading.value = false;
+
+      // Включаем красивую подсветку цели
+      triggerHighlight(parentMessageId);
+    });
+
+  } catch (error) {
+    console.error("Ошибка загрузки контекста:", error);
+    isContextLoading.value = false;
+  }
+}
+
+// Функция подсветки
+function triggerHighlight(id) {
+  highlightedMessageId.value = id;
+  setTimeout(() => {
+    highlightedMessageId.value = null; // Выключаем подсветку через 2 секунды
+  }, 2000);
+}*/
+
+
+
+
+
+
+
+async function handleScroll() {
+  const container = messageContainer.value;
+  if (!container || isLoading.value || !chatStore.nextPageUrl) return;
+
+  // Если доскроллили до верха
+  if (container.scrollTop === 0) {
+    isLoading.value = true;
+
+    // 1. Запоминаем высоту контейнера ДО вставки новых сообщений
+    const previousHeight = container.scrollHeight;
+    //console.log(previousHeight);
+    try {
+      const response = await axios.get(chatStore.nextPageUrl);
+
+      // 2. Вставляем старые сообщения в начало
+      chatStore.messages = [...response.data.data, ...chatStore.messages];
+      chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
+
+      // Обновляем указатель на СЛЕДУЮЩИЙ (более старый) курсор
+      chatStore.nextPageUrl = response.data.next_page_url;
+
+      // 3. Ждем, пока Vue обновит DOM и отрисует новые блоки
+      nextTick(() => {
+
+        // Вычисляем, насколько увеличился контейнер сверху
+        const heightDifference = container.scrollHeight - previousHeight;
+        console.log(heightDifference);
+        // Сдвигаем ползунок вниз ровно на высоту добавленного контента.
+        // Для пользователя экран визуально останется неподвижным!
+        container.scrollTop = heightDifference;
+      });
+    } catch (error) {
+      console.error("Ошибка пагинации:", error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}
+
+
 
 const scrollToMessage = (parentId) => {
   if (!parentId) return
@@ -776,7 +892,7 @@ const scrollToMessage = (parentId) => {
     
     // Классы мягкого акцента для ВСЕГО блока сообщения
     // scale-[1.03] идеален для крупных блоков, чтобы верстка не перекрывала соседние элементы
-    const scaleClasses = ['scale-[1.2]', 'z-30', 'relative']
+    const scaleClasses = ['scale-[1.1]', 'z-30', 'relative']
 
     // 2. Быстро и мягко увеличиваем весь блок
     element.classList.add('duration-200', 'transition-transform', ...scaleClasses)
@@ -796,19 +912,22 @@ const scrollToMessage = (parentId) => {
 
 
 // Вспомогательная функция для поиска текста родительского сообщения прямо на фронтенде
-const getParentMessageText = (parentId) => {
+/*const getParentMessageText = (parentId) => {
   //console.log(chatStore.messages);
   //console.log(parentId);
   const parentMsg = chatStore.messages.find(m => Number(m.id) ===  Number(parentId));
-    console.log(parentMsg);
+    //console.log(parentMsg);
   return parentMsg ? parentMsg.text : 'Сообщение удалено или недоступно'
-}
+}*/
 
 // Вспомогательная функция для поиска имени автора цитаты
+/*
 const getParentMessageAuthor = (parentId) => {
+  console.log(chatStore.messages);
   const parentMsg = chatStore.messages.find(m => Number(m.id) ===  Number(parentId))
   return parentMsg?.user?.name || 'Собеседник'
 }
+*/
 
 // ================= БЛОК РЕАКЦИЙ =================
 
@@ -869,7 +988,7 @@ const closeEmojiPicker = () => {
 
 
 // 1. Функция подсчета и группировки реакций для конкретного сообщения
-const getGroupedReactions = (msgReactions) => {
+/*const getGroupedReactions = (msgReactions) => {
   if (!msgReactions || !msgReactions.length) return []
 
   const groups = {}
@@ -892,7 +1011,7 @@ const getGroupedReactions = (msgReactions) => {
 
   // Возвращаем массив, отсортированный по количеству реакций (сначала популярные)
   return Object.values(groups).sort((a, b) => b.count - a.count)
-}
+}*/
 
 
 const addReaction = async (msgId, emoji) => {
@@ -1028,7 +1147,6 @@ const selectChat = async (id, user = null) => {
 
   window.Echo.private(`chat.${id}`)
 
-
       // 1. Слушаем отправку НОВЫХ сообщений
       .listen('MessageSent', (e) => {
         // Обновляем превью последнего сообщения в списке чатов слева
@@ -1041,6 +1159,7 @@ const selectChat = async (id, user = null) => {
         if (chatStore.activeChatId === id) {
           if (!chatStore.messages.some(m => m.id === e.id)) {
             chatStore.messages.push(e);
+            chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
           }
           scrollToBottom();
           chatStore.readChatMessages(id); // Шлем бэку статус "прочитано"
@@ -1058,6 +1177,7 @@ const selectChat = async (id, user = null) => {
         const idx = chatStore.messages.findIndex(m => m.id === e.message.id);
         if (idx !== -1) {
           chatStore.messages[idx] = e.message;
+          chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
         }
 
         // Также обновляем превью в левой панели, если это было самое последнее сообщение
@@ -1071,11 +1191,12 @@ const selectChat = async (id, user = null) => {
       .listen('MessageDeleted', (e) => {
         // Мгновенно стираем удаленное облачко с экрана
         chatStore.messages = chatStore.messages.filter(m => m.id !== e.messageId);
-        console.log(chatStore.messages)
+        chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
+        //console.log(chatStore.messages)
         
         if(chatStore.messages.length ===0){
             chatStore.fetchChats();
-            console.log(chatStore.chatList) ;
+            //console.log(chatStore.chatList) ;
         }
 
     
@@ -1108,15 +1229,14 @@ const selectChat = async (id, user = null) => {
             msg.read_at = e.read_at; // Устанавливаем время прочтения
           }
         });
-
+        chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
         // Также обнуляем счетчик непрочитанных для этого чата в списке слева (на всякий случай)
         const targetChat = chatStore.chatList.find(c => c.id === id);
         if (targetChat) {
           targetChat.unread_count = 0;
         }
-
       });
-           
+
 };
 
 
@@ -1219,6 +1339,7 @@ async function deleteMessage(messageId) {
     await axios.delete(`/api/messages/${messageId}`);
     // Удаляем локально с экрана
     chatStore.messages = chatStore.messages.filter(m => m.id !== messageId);
+    chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
 
     if(chatStore.messages.length === 0){
         chatStore.fetchChats();    
@@ -1244,6 +1365,8 @@ const sendMessage = async () => {
       // Обновляем сообщение локально на экране
       const idx = chatStore.messages.findIndex(m => m.id === editingMessageId.value);
       if (idx !== -1) chatStore.messages[idx] = response.data;
+      chatStore.groupsMessages = chatStore.groupedMessages(chatStore.messages);
+
 
       cancelEdit(); // Сбрасываем режим редактирования
     } catch (error) {
@@ -1272,9 +1395,9 @@ const sendMessage = async () => {
 
   const message = await chatStore.sendMessageAction(chatStore.activeChatId, formData);
 
-  if (!chatStore.messages.some(m => m.id === message.id)) {
+/*  if (!chatStore.messages.some(m => m.id === message.id)) {
     chatStore.messages.push(message);
-  }
+  }*/
 
   newMessageText.value = '';
   selectedFiles.value = [];
@@ -1332,13 +1455,23 @@ function scrollToBottom() {
 }
 
 // Скроллим вниз, когда в массив chatStore.messages добавляются новые сообщения
-watch(
+/*watch(
     () => chatStore.messages,
     () => {
       scrollToBottom();
     },
     { deep: true } // deep нужен, так как мы следим за изменениями внутри массива
-);
+);*/
 
 </script>
 
+<style scoped>
+@keyframes pulse-highlight {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.02); filter: brightness(1.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+.animate-pulse-highlight {
+  animation: pulse-highlight 1s ease-in-out 2; /* Мигнет 2 раза */
+}
+</style>

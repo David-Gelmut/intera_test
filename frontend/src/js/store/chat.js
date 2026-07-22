@@ -7,7 +7,9 @@ export const useChatStore = defineStore('chat', {
         usersList: [],
         activeChatId: null,
         activeInterlocutor: null,
-        messages: []
+        messages: [],
+        groupsMessages: [],
+        nextPageUrl: null
     }),
 
     actions: {
@@ -19,7 +21,6 @@ export const useChatStore = defineStore('chat', {
                 console.error('Ошибка загрузки чатов:', error);
             }
         },
-
         async fetchUsersList() {
             try {
                 const response = await axios.get('/api/chats/users');
@@ -28,17 +29,36 @@ export const useChatStore = defineStore('chat', {
                 console.error('Ошибка загрузки контактов:', error);
             }
         },
-
         // Загрузка истории сообщений из базы данных
         async loadMessages(chatId) {
             try {
                 const response = await axios.get(`/api/chats/${chatId}/messages`);
-                this.messages = response.data;
+                this.messages = response.data.data;
+                this.groupsMessages = this.groupedMessages(this.messages);
+                this.nextPageUrl = response.data.next_page_url
             } catch (error) {
                 console.error('Ошибка загрузки сообщений:', error);
             }
         },
+        groupedMessages(messages){
 
+            if (!messages || messages.length === 0) return {};
+
+            const groups = {};
+            messages.forEach(msg => {
+                // Форматируем дату красиво ("22 июля 2026 г.")
+                const date = new Date(msg.created_at).toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+
+                if (!groups[date]) groups[date] = [];
+                groups[date].push(msg);
+            });
+
+            return groups;
+        },
         // Отправка нового сообщения на бэкенд
         async sendMessageAction(chatId, formData) {
 
@@ -47,11 +67,13 @@ export const useChatStore = defineStore('chat', {
                 const response = await axios.post(`/api/chats/${chatId}/messages`, formData, {
                     headers: {'Content-Type': 'multipart/form-data'}
                 });
+
                 // Оптимистично добавляем готовое сообщение (с текстом и файлами сразу)
                 //  if (!this.messages.some(m => m.id === response.data.id)) {
                 this.messages.push(response.data);
+                this.groupsMessages = this.groupedMessages(this.messages);
                 //}
-
+              //  console.log(this.groupsMessages);
                 return response.data;
             } catch (error) {
                 alert('Ошибка отправки сообщения');
@@ -75,6 +97,7 @@ export const useChatStore = defineStore('chat', {
             try {
                 await axios.post(`/api/chats/${chatId}/clear`);
                 this.messages = []; // Мгновенно очищаем ленту сообщений на экране
+                this.groupsMessages = [];
             } catch (error) {
                 console.error('Ошибка очистки чата:', error);
                 throw error;
@@ -90,7 +113,7 @@ export const useChatStore = defineStore('chat', {
                 this.activeChatId = null;
                 this.activeInterlocutor = null;
                 this.messages = [];
-
+                this.groupsMessages = [];
                 // Обновляем список чатов
                 await this.fetchChats();
             } catch (error) {

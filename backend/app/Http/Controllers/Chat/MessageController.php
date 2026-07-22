@@ -32,12 +32,15 @@ class MessageController extends Controller
             ], 403);
         }
 
-        $messages = Message::where('chat_id', $chatId)
+        $messages = Message::query()
+            ->where('chat_id', $chatId)
             ->with('user:id,name')
             ->with('attachments')
             ->with('reactions')
-            ->oldest()
-            ->get();
+            ->with('parent')
+            ->with('parent.user:id,name')
+            ->orderByDesc('id')
+            ->cursorPaginate(10);;
 
         $messages->transform(function ($msg) {
             if ($msg->text) {
@@ -47,10 +50,23 @@ class MessageController extends Controller
                     // Если сообщение старое или не зашифровано, оставляем как есть
                 }
             }
+                  if ($msg->parent) {
+                try {
+                    $msg->parent->text = Crypt::decryptString($msg->parent->text);
+                } catch (\Exception $e) {
+                    // Если сообщение старое или не зашифровано, оставляем как есть
+                }
+            }
+
             return $msg;
         });
 
-        return response()->json($messages);
+
+
+        return response()->json([
+            'data' => array_reverse($messages->items()),
+            'next_page_url' => $messages->nextPageUrl(), // Ссылка на следующую (более старую) порцию
+        ]);
     }
 
     /**
@@ -231,6 +247,60 @@ class MessageController extends Controller
             'status' => 'success',
             'action' => $action,
             'reactions' => $updatedReactions
+        ]);
+    }
+
+    public function getContextMessage(Request $request, $chatId, $messageId)
+    {
+        // 1. Находим целевое сообщение
+        $targetMessage = Message::where('chat_id', $chatId)
+            ->with('parent')
+            ->findOrFail($messageId);
+
+        // 2. Берем 10 сообщений СТАРШЕ целевого
+        $olderMessages = Message::where('chat_id', $chatId)
+            ->with('parent')
+            ->where('id', '<', $messageId)
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get()
+            ->reverse(); // Разворачиваем, чтобы шли по порядку
+
+        // 3. Берем 10 сообщений НОВЕЕ целевого
+        $newerMessages = Message::where('chat_id', $chatId)
+            ->with('parent')
+            ->where('id', '>', $messageId)
+            ->orderBy('id', 'asc')
+            ->limit(10)
+            ->get();
+
+        // 4. Собираем всё в один хронологический массив
+        $contextMessages = $olderMessages->merge([$targetMessage])->merge($newerMessages);
+
+
+        /*$contextMessages->transform(function ($msg) {
+            if ($msg->text) {
+                try {
+                    $msg->text = Crypt::decryptString($msg->text);
+                } catch (\Exception $e) {
+                    // Если сообщение старое или не зашифровано, оставляем как есть
+                }
+            }
+            if ($msg->parent) {
+                try {
+                    $msg->parent->text = Crypt::decryptString($msg->parent->text);
+                } catch (\Exception $e) {
+                    // Если сообщение старое или не зашифровано, оставляем как есть
+                }
+            }
+        });*/
+
+        // 5. Генерируем курсоры для пагинации вверх и вниз от этого контекста
+        // Для простоты пока отдаем ID первого и последнего сообщения в этой пачке
+        return response()->json([
+            'data' => $contextMessages,
+            'prev_cursor' => $olderMessages->first()?->id, // Для скролла ВВЕРХ
+            'next_cursor' => $newerMessages->last()?->id,  // Для скролла ВНИЗ
         ]);
     }
 }
