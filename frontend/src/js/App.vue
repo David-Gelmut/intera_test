@@ -6,7 +6,6 @@
         v-if="authStore.isAuthenticated && authStore.isVerified && authStore.isMobileMenuOpen"
         @click="isMobileMenuOpen = false"
         class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden">
-
     </div>
 
     <!-- Основной контейнер контента -->
@@ -14,12 +13,9 @@
         class="flex flex-1 flex-col transition-all duration-300"
         :class="{ 'lg:pl-64': authStore.isAuthenticated && authStore.isVerified }">
       <!-- Контент страницы -->
-      <main class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+      <main class="flex-1 md:p-8 w-full mx-auto">
         <router-view v-slot="{ Component }">
           <component :is="Component" transition/>
-<!--          <transition name="fade" mode="out-in">
-            <component :is="Component" transition/>
-          </transition>-->
         </router-view>
       </main>
     </div>
@@ -32,6 +28,7 @@ const authStore = useAuthStore();
 
 </script>
 <style>
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
