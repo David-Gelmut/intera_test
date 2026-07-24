@@ -34,8 +34,7 @@ RUN install-php-extensions \
     bcmath \
     gd \
     dom \
-    sockets \
-    redis
+    sockets
 
 
 # Устанавливаем Composer
