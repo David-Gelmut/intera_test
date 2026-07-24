@@ -1,22 +1,22 @@
 <template>
-
   <!--div class="space-y-6">
-    <div class="border-b border-slate-200 pb-5">
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Сообщения (Real-time мессенджер)</h1>
-      <p>Коммуникационное ядро платформы, обеспечивающее мгновенную и безопасную связь между всеми участниками экосистемы.</p>
-      <p></p>
-      <ul class="mt-1 text-sm text-slate-500">
-        <li>Зачем нужна: Для оперативного обсуждения деталей заказов, согласования этапов проектирования, пересылки рабочих документов и поддержания связи внутри проектных команд.</li>
-        <li>Формат контента: Диалоги и групповые чаты, поддерживающие отправку зашифрованного текста со смайликами, встроенное воспроизведение видеороликов, галереи изображений и скачивание документов любых форматов.</li>
-        <li>Логика работы: Работает на базе веб-сокетов Reverb и очередей RabbitMQ.</li>
-      </ul>
-    </div>
+  <div class="border-b border-slate-200 pb-5">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Сообщения (Real-time мессенджер)</h1>
+    <p>Коммуникационное ядро платформы, обеспечивающее мгновенную и безопасную связь между всеми участниками экосистемы.</p>
+    <p></p>
+    <ul class="mt-1 text-sm text-slate-500">
+      <li>Зачем нужна: Для оперативного обсуждения деталей заказов, согласования этапов проектирования, пересылки рабочих документов и поддержания связи внутри проектных команд.</li>
+      <li>Формат контента: Диалоги и групповые чаты, поддерживающие отправку зашифрованного текста со смайликами, встроенное воспроизведение видеороликов, галереи изображений и скачивание документов любых форматов.</li>
+      <li>Логика работы: Работает на базе веб-сокетов Reverb и очередей RabbitMQ.</li>
+    </ul>
+  </div>
 
-    <div class="max-w-3xl">
+  <div class="max-w-3xl">
 
-    </div>
+  </div>
 
-  </div-->
+</div-->
+<div class="">
   <div
       class="flex h-[calc(100vh-theme(spacing.16)-theme(spacing.1))] border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs font-sans">
 
@@ -244,12 +244,12 @@
 
           <div v-for="(dayMessages, date) in  chatStore.groupsMessages" :key="date" class="flex flex-col gap-4">
 
-              <!-- Красивая плашка даты посередине экрана -->
-              <div class="flex justify-center my-2">
+            <!-- Красивая плашка даты посередине экрана -->
+            <div class="flex justify-center my-2">
                 <span class="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
                   {{ date }}
                 </span>
-              </div>
+            </div>
 
             <div
                 v-for="(msg, index) in dayMessages"
@@ -290,7 +290,7 @@
                     <span class="font-semibold" :class="isMyMessage(msg.user_id) ? 'text-white' : 'text-indigo-600'">
                       {{ msg.parent.user.name}}
                     </span>
-                      <span class="truncate opacity-90">
+                    <span class="truncate opacity-90">
                         {{msg.parent.text}}
                     </span>
                   </div>
@@ -580,11 +580,11 @@
                 </div>
 
                 <!-- Кнопка отмены ответа (крестик) -->
-                <button 
-                  @click="cancelReply" 
-                  type="button" 
-                  class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors cursor-pointer"
-                  title="Отменить ответ"
+                <button
+                    @click="cancelReply"
+                    type="button"
+                    class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors cursor-pointer"
+                    title="Отменить ответ"
                 >
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -620,7 +620,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
-              
+
               <!-- Поле ввода текста -->
               <input
                   v-model="newMessageText"
@@ -662,6 +662,9 @@
     </div>
 
   </div>
+</div>
+
+
 
   <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ВИДЕО НА ВЕСЬ ЭКРАН -->
   <div
@@ -1294,15 +1297,21 @@ function onSelectEmoji(emoji) {
   showEmojiPicker.value = false;
 }
 
+// Массив Tailwind-классов для жесткой блокировки скролла на мобилках и ПК
+const scrollLockClasses = ['h-screen', 'h-[100dvh]', 'overflow-hidden', 'overscroll-none'];
+
 onMounted(() => {
   document.addEventListener('click', closeActionsMenu)
   chatStore.fetchChats();
   chatStore.fetchUsersList();
-  
+
+  document.documentElement.classList.add(...scrollLockClasses);
+  document.body.classList.add(...scrollLockClasses);
 });
 
 
 onUnmounted(() => {
+
   document.removeEventListener('click', closeActionsMenu)
 
   if (chatStore.activeChatId) {
@@ -1311,6 +1320,9 @@ onUnmounted(() => {
   }
   
   console.log('Пользователь покинул чат. Полная очистка ресурсов...');
+
+  document.documentElement.classList.remove(...scrollLockClasses);
+  document.body.classList.remove(...scrollLockClasses);
 });
 
 // Клик по контакту
