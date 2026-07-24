@@ -1,7 +1,9 @@
 <template>
   <div>
     <Sidebar />
-    <div class="flex flex-col min-h-screen bg-slate-50 font-sans overflow-hidden">
+    <div
+        :class="$route.name === 'Chat' ? 'overflow-hidden overscroll-none' : 'min-h-screen bg-slate-50'"
+        class="flex flex-col min-h-screen bg-slate-50 font-sans overflow-hidden ">
       <Header />
         <main class="flex-1 pl-2 pr-2 md:p-8 w-full mx-auto">
           <router-view v-slot="{ Component }">
@@ -23,6 +25,7 @@ import { useToastStore } from '../../store/toast.js';
 import { useChatStore } from '../../store/chat.js';
 import ToastContainer from '../../components/ToastContainer.vue';
 import {onMounted, onUnmounted} from "vue";
+
 
 const authStore = useAuthStore();
 const toastStore = useToastStore();

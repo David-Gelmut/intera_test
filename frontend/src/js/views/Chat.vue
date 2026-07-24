@@ -16,9 +16,15 @@
   </div>
 
 </div-->
-<div class="">
+<!-- ВРЕМЕННАЯ ТЕСТОВАЯ ПЛАШКА ДЛЯ REDMI 9 -->
+<!--  <div class="fixed top-2 right-2 z-50 bg-slate-900/90 text-white text-[10px] p-3 rounded-xl font-mono space-y-1 shadow-lg pointer-events-none">
+    <div>📱 Window H: {{ windowHeight }}px</div>
+    <div>👁️ Viewport H: {{ viewportHeight }}px</div>
+    <div>⌨️ Клавиатура: {{ keyboardHeight }}px</div>
+  </div>-->
+
   <div
-      class="flex h-[calc(100vh-theme(spacing.16)-theme(spacing.1))] border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs font-sans">
+      class="flex h-[90dvh] border border-slate-200 rounded-2xl bg-white shadow-xs font-sans">
 
     <!-- Левая колонка: Переключатель Чаты / Контакты -->
     <div
@@ -662,7 +668,7 @@
     </div>
 
   </div>
-</div>
+
 
 
 
@@ -776,6 +782,21 @@ const activeMessageId = ref(null)
 
 const isContextLoading = ref(false);
 const highlightedMessageId = ref(null);
+
+
+
+
+/*const windowHeight = ref(0);
+const viewportHeight = ref(0);
+const keyboardHeight = ref(0);
+
+const checkSizes = () => {
+  windowHeight.value = window.innerHeight;
+  if (window.visualViewport) {
+    viewportHeight.value = Math.round(window.visualViewport.height);
+    keyboardHeight.value = window.innerHeight - Math.round(window.visualViewport.height);
+  }
+};*/
 
 /*async function jumpToMessage(parentMessageId) {
   // 1. Проверяем, может сообщение УЖЕ есть на экране?
@@ -1298,15 +1319,15 @@ function onSelectEmoji(emoji) {
 }
 
 // Массив Tailwind-классов для жесткой блокировки скролла на мобилках и ПК
-const scrollLockClasses = ['h-screen', 'h-[100dvh]', 'overflow-hidden', 'overscroll-none'];
+
 
 onMounted(() => {
   document.addEventListener('click', closeActionsMenu)
   chatStore.fetchChats();
   chatStore.fetchUsersList();
 
-  document.documentElement.classList.add(...scrollLockClasses);
-  document.body.classList.add(...scrollLockClasses);
+  /*checkSizes();
+  window.visualViewport?.addEventListener('resize', checkSizes);*/
 });
 
 
@@ -1321,8 +1342,7 @@ onUnmounted(() => {
   
   console.log('Пользователь покинул чат. Полная очистка ресурсов...');
 
-  document.documentElement.classList.remove(...scrollLockClasses);
-  document.body.classList.remove(...scrollLockClasses);
+ /* window.visualViewport?.removeEventListener('resize', checkSizes);*/
 });
 
 // Клик по контакту
