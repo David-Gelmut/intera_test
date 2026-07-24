@@ -65,12 +65,21 @@ class MessageSent implements ShouldBroadcastNow
             }
         }
 
+        if ($this->message->parent) {
+            try {
+                $this->message->parent->text = Crypt::decryptString($this->message->parent->text);
+            } catch (\Exception $e) {
+                // Если сообщение старое или не зашифровано, оставляем как есть
+            }
+        }
+
         return [
             'id' => $this->message->id,
             'chat_id' => $this->message->chat_id,
             'text' => $decryptedText,
             'user_id' => $this->message->user_id,
             'user_name' => $this->message->user->name,
+            'parent' => $this->message->parent,
             'attachments' => $this->message->attachments,
             'created_at' => $this->message->created_at->toIso8601String(),
         ];
